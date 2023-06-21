@@ -1,10 +1,11 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Client, SubmitResponse, Transaction, Wallet } from '@transia/xrpl';
-import { IAccount } from '../hooks/interfaces/account.interface';
+import { IAccount } from '../../hooks/interfaces/account.interface';
+import { IAccountInfo } from './interfaces/account-info.interface';
 
 @Injectable()
 export class XrplService implements OnModuleInit, OnModuleDestroy {
-  public readonly client = new Client('wss://hooks-testnet-v3.xrpl-labs.com');
+  private readonly client = new Client('wss://hooks-testnet-v3.xrpl-labs.com');
 
   async onModuleInit() {
     await this.client.connect();
@@ -40,5 +41,20 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
     }
     console.log(submitRes);
     return submitRes;
+  }
+
+  async getAccountInfo(accountNumber: string): Promise<IAccountInfo> {
+    const response = await this.client.request({
+      command: 'account_info',
+      account: accountNumber,
+      ledger_index: 'validated',
+    });
+    const { Account, Sequence, Flags, Balance } = response.result.account_data;
+    return {
+      Account,
+      Balance,
+      Flags,
+      Sequence,
+    };
   }
 }

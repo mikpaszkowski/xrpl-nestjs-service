@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { XrplService } from '../xrpl/client.service';
+import { XrplService } from '../xrpl/client/client.service';
 import { SetHook, SubmitResponse } from '@transia/xrpl';
 import { readFileSync } from 'fs';
 import { createHash, randomBytes } from 'node:crypto';
@@ -35,6 +35,7 @@ export class HookService {
             CreateCode: readFileSync('src/hooks/resources/rental_state_hook.wasm').toString('hex').toUpperCase(),
             HookOn: HOOK_ON_URI_CREATE_BUY_ONLY,
             HookNamespace: HOOK_NS,
+            // ...(input.grants?.length && input.grants?.length > 0 ? { HookGrant: input.grants } : {}),
             HookApiVersion: 0,
             Flags: 1,
           },

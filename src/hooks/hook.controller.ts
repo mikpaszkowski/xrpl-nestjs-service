@@ -1,5 +1,5 @@
 import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/common';
-import { HookService } from './service';
+import { HookService } from './hook.service';
 import { HookInstallInputDTO, HookInstallOutputDTO } from './dto/hook-install.dto';
 
 @Controller('hook')

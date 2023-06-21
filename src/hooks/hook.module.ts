@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { HookController } from './hook.controller';
-import { HookService } from './service';
-import { XrplService } from '../xrpl/client.service';
+import { HookService } from './hook.service';
+import { XrplService } from '../xrpl/client/client.service';
 
 @Module({
   controllers: [HookController],
