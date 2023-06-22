@@ -6,18 +6,14 @@ import { createHash, randomBytes } from 'node:crypto';
 import { HookInstallInputDTO } from './dto/hook-install.dto';
 import * as process from 'process';
 
-const HOOK_ON_URI_CREATE_BUY_ONLY = 'fffffffffffffffffffffffffffffffffffffffffffffffffffe7fffffdfffff'.toUpperCase();
+const HOOK_ON_URI_CREATE_BUY_ONLY = 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE7FFFFFDFFFFF';
 
 @Injectable()
 export class HookService {
   constructor(private readonly xrpl: XrplService) {}
 
   async install(input: HookInstallInputDTO): Promise<SubmitResponse> {
-    const response = await this.xrpl.client.request({
-      command: 'account_info',
-      account: input.accountNumber,
-      ledger_index: 'validated',
-    });
+    const response = await this.xrpl.getAccountInfo(input.accountNumber);
 
     const randomBytesForNS = randomBytes(32);
 
@@ -28,7 +24,7 @@ export class HookService {
       Account: input.accountNumber,
       TransactionType: 'SetHook',
       Fee: '1000',
-      Sequence: response.result.account_data.Sequence,
+      Sequence: response.Sequence,
       NetworkID: process.env.NETWORK_ID,
       Hooks: [
         {
