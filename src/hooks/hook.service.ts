@@ -4,6 +4,7 @@ import { SetHook, SubmitResponse } from '@transia/xrpl';
 import { readFileSync } from 'fs';
 import { createHash, randomBytes } from 'node:crypto';
 import { HookInstallInputDTO } from './dto/hook-install.dto';
+import * as process from 'process';
 
 const HOOK_ON_URI_CREATE_BUY_ONLY = 'fffffffffffffffffffffffffffffffffffffffffffffffffffe7fffffdfffff'.toUpperCase();
 
@@ -28,7 +29,7 @@ export class HookService {
       TransactionType: 'SetHook',
       Fee: '1000',
       Sequence: response.result.account_data.Sequence,
-      NetworkID: 21338,
+      NetworkID: process.env.NETWORK_ID,
       Hooks: [
         {
           Hook: {

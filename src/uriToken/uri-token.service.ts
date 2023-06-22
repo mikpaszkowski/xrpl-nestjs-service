@@ -19,6 +19,7 @@ import {
   URITokenInputDTO,
 } from './dto/uri-token-input.dto';
 import { RentalMemoType } from './uri-token.constant';
+import * as process from 'process';
 
 @Injectable
 export class UriTokenService {
@@ -56,7 +57,7 @@ export class UriTokenService {
       Account: input.account.address,
       Fee: '1000',
       Sequence: response.Sequence,
-      NetworkID: 21338,
+      NetworkID: process.env.NETWORK_ID,
       TransactionType: 'URITokenMint',
       URI: input.uri,
     };
@@ -92,7 +93,7 @@ export class UriTokenService {
       Account: input.account.address,
       Fee: '1000',
       Sequence: response.Sequence,
-      NetworkID: 21338,
+      NetworkID: process.env.NETWORK_ID,
       TransactionType: 'URITokenCreateSellOffer',
       URITokenID: input.uri,
       Amount: '0',
@@ -110,7 +111,7 @@ export class UriTokenService {
       Account: input.account.address,
       Fee: '1000',
       Sequence: response.Sequence,
-      NetworkID: 21338,
+      NetworkID: process.env.NETWORK_ID,
       TransactionType: 'URITokenCreateSellOffer',
       URITokenID: uri,
       Amount: '0',
@@ -125,7 +126,7 @@ export class UriTokenService {
       Account: input.account.address,
       Fee: '1000',
       Sequence: response.Sequence,
-      NetworkID: 21338,
+      NetworkID: process.env.NETWORK_ID,
       TransactionType: 'URITokenBuy',
       URITokenID: uri,
       Amount: '0',
@@ -139,7 +140,7 @@ export class UriTokenService {
       Account: input.account.address,
       Fee: '1000',
       Sequence: response.Sequence,
-      NetworkID: 21338,
+      NetworkID: process.env.NETWORK_ID,
       TransactionType: 'URITokenCancelSellOffer',
       URITokenID: uri,
       Memos: [...this.prepareMemosForLending(input)],

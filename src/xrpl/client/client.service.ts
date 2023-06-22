@@ -2,10 +2,11 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { Client, SubmitResponse, Transaction, Wallet } from '@transia/xrpl';
 import { IAccount } from '../../hooks/interfaces/account.interface';
 import { IAccountInfo } from './interfaces/account-info.interface';
+import * as process from 'process';
 
 @Injectable()
 export class XrplService implements OnModuleInit, OnModuleDestroy {
-  private readonly client = new Client('wss://hooks-testnet-v3.xrpl-labs.com');
+  private readonly client = new Client(process.env.SERVER_API_ENDPOINT);
 
   async onModuleInit() {
     await this.client.connect();
