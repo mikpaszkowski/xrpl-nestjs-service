@@ -1,5 +1,11 @@
-import { IAccount } from '../../hooks/interfaces/account.interface';
+import { IAccount } from '../../account/interfaces/account.interface';
 import { RentalType } from '../uri-token.constant';
+
+export class BaseRentalInfo {
+  totalAmount: number;
+  rentalType: RentalType;
+  deadline: string;
+}
 
 export class URITokenInputDTO extends BaseRentalInfo {
   account: IAccount;
@@ -10,6 +16,7 @@ export class URITokenInputDTO extends BaseRentalInfo {
 export class ReturnURITokenInputDTO extends BaseRentalInfo {
   account: IAccount;
   destinationAccount: string;
+  uri: string;
 }
 
 export class CancelRentalOfferDTO extends BaseRentalInfo {
@@ -23,10 +30,4 @@ export class MintURITokenInputDTO {
 
 export class AcceptRentalOffer extends BaseRentalInfo {
   account: IAccount;
-}
-
-export class BaseRentalInfo {
-  totalAmount: number;
-  rentalType: RentalType;
-  deadline: string;
 }

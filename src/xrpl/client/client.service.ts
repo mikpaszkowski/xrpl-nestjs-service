@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Client, SubmitResponse, Transaction, Wallet } from '@transia/xrpl';
-import { IAccount } from '../../hooks/interfaces/account.interface';
+import { Client, LedgerEntryRequest, SubmitResponse, Transaction, Wallet } from '@transia/xrpl';
+import { IAccount } from '../../account/interfaces/account.interface';
 import { IAccountInfo } from './interfaces/account-info.interface';
 import * as process from 'process';
 
@@ -18,6 +18,7 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
 
   async submitTransaction(tx: Transaction, account: IAccount): Promise<SubmitResponse> {
     const wallet = Wallet.fromSeed(account.secret);
+    console.log(JSON.stringify(tx));
 
     const signedTxBeforeFee = wallet.sign(tx);
 
@@ -28,7 +29,7 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
     const prepared_tx = await this.client.autofill(tx as Transaction);
 
     const signedTxNew = wallet.sign(prepared_tx);
-
+    console.log(JSON.stringify(prepared_tx));
     let submitRes;
     try {
       submitRes = await this.client.submit(signedTxNew.tx_blob);
@@ -44,7 +45,7 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
     return submitRes;
   }
 
-  async getAccountInfo(accountNumber: string): Promise<IAccountInfo> {
+  async getAccountBasicInfo(accountNumber: string): Promise<IAccountInfo> {
     const response = await this.client.request({
       command: 'account_info',
       account: accountNumber,
@@ -57,5 +58,31 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
       Flags,
       Sequence,
     };
+  }
+
+  async getAccountInfo(accountNumber: string) {
+    return await this.client.request({
+      command: 'account_info',
+      account: accountNumber,
+    });
+  }
+
+  async getAccountNamespace(accountNumber: string, namespace: string) {
+    return await this.client.request({
+      command: 'account_namespace',
+      account: accountNumber,
+      namespace_id: namespace,
+    });
+  }
+
+  async getAccountHooks(account: string) {
+    const hookReq: LedgerEntryRequest = {
+      command: 'ledger_entry',
+      hook: {
+        account: account,
+      },
+    };
+    console.log(hookReq);
+    return await this.client.request(hookReq);
   }
 }

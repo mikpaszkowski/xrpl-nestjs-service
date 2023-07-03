@@ -1,6 +1,6 @@
-import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post } from '@nestjs/common';
 import { HookService } from './hook.service';
-import { HookInstallInputDTO, HookInstallOutputDTO } from './dto/hook-install.dto';
+import { HookInstallInputDTO, HookInstallOutputDTO, HookRemoveInputDTO } from './dto/hook-install.dto';
 
 @Controller('hook')
 export class HookController {
@@ -27,5 +27,33 @@ export class HookController {
         }
       );
     }
+  }
+
+  @Delete()
+  async deleteHook(@Body() inputDTO: HookRemoveInputDTO) {
+    try {
+      const response = await this.service.remove(inputDTO);
+      return {
+        tx_hash: response.result.tx_json.hash,
+        result: response.result.engine_result,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: `Hook removal on account: ${inputDTO.accountNumber} has failed`,
+        },
+        HttpStatus.BAD_REQUEST,
+        {
+          cause: err,
+        }
+      );
+    }
+  }
+
+  @Get(':account')
+  async accountHooks(@Param('account') account: string) {
+    return this.service.getAccountHooks(account);
   }
 }

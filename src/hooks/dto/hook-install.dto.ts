@@ -1,4 +1,4 @@
-import { HookParameter } from '@transia/xrpl/dist/npm/models/common';
+import { HookGrant } from '@transia/xrpl/dist/npm/models/common';
 
 export class HookInstallOutputDTO {
   result: string;
@@ -8,6 +8,16 @@ export class HookInstallOutputDTO {
 export class HookInstallInputDTO {
   readonly accountNumber: string;
   readonly seed: string;
-  readonly grantedAccounts?: string[];
-  readonly parameters?: HookParameter[];
+  readonly grants?: HookGrant[];
+}
+
+export class HookRemoveInputDTO {
+  readonly accountNumber: string;
+  readonly seed: string;
+}
+
+export class HookResetInputDTO {
+  readonly accountNumber: string;
+  readonly seed: string;
+  readonly namespace: string;
 }
