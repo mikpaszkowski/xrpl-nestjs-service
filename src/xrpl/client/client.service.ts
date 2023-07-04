@@ -8,6 +8,10 @@ import * as process from 'process';
 export class XrplService implements OnModuleInit, OnModuleDestroy {
   private readonly client = new Client(process.env.SERVER_API_ENDPOINT);
 
+  public getClient(): Client {
+    return this.client;
+  }
+
   async onModuleInit() {
     await this.client.connect();
   }
@@ -17,6 +21,7 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
   }
 
   async submitTransaction(tx: Transaction, account: IAccount): Promise<SubmitResponse> {
+    console.log;
     const wallet = Wallet.fromSeed(account.secret);
     console.log(JSON.stringify(tx));
 
@@ -79,6 +84,17 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
     const hookReq: LedgerEntryRequest = {
       command: 'ledger_entry',
       hook: {
+        account: account,
+      },
+    };
+    console.log(hookReq);
+    return await this.client.request(hookReq);
+  }
+
+  async getAccountTokens(account: string) {
+    const hookReq: LedgerEntryRequest = {
+      command: 'ledger_entry',
+      uritoken: {
         account: account,
       },
     };

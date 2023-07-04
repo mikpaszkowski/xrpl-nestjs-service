@@ -1,11 +1,12 @@
-import { Body, Controller, HttpException, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpException, HttpStatus, Param, Post } from '@nestjs/common';
 import { UriTokenService } from './uri-token.service';
 import { MintURITokenInputDTO } from './dto/uri-token-input.dto';
 import { URITokenOutputDto } from './dto/uri-token-output.dto';
+import { XrplService } from '../xrpl/client/client.service';
 
 @Controller('uri-tokens')
 export class UriTokenController {
-  constructor(private readonly service: UriTokenService) {}
+  constructor(private readonly service: UriTokenService, private readonly xrpl: XrplService) {}
 
   @Post('mint')
   async mintURIToken(@Body() input: MintURITokenInputDTO): Promise<URITokenOutputDto> {
@@ -28,5 +29,10 @@ export class UriTokenController {
         }
       );
     }
+  }
+
+  @Get(':address')
+  async getURITokens(@Param('address') address: string) {
+    return await this.xrpl.getAccountTokens(address);
   }
 }

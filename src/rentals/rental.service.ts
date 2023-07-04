@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { XrplService } from '../xrpl/client/client.service';
 import {
   AcceptRentalOffer,
@@ -19,10 +19,12 @@ import { RentalMemoType } from '../uriToken/uri-token.constant';
 import { IAccountInfo } from '../xrpl/client/interfaces/account-info.interface';
 import * as process from 'process';
 import { OfferType } from './retnals.constants';
+import { floatToLEXfl } from '@transia/hooks-toolkit';
+import { HookService } from '../hooks/hook.service';
 
 @Injectable()
 export class RentalService {
-  constructor(private readonly xrpl: XrplService) {}
+  constructor(private readonly xrpl: XrplService, private readonly hookService: HookService) {}
 
   async createOffer(type: OfferType, input: URITokenInputDTO): Promise<SubmitResponse> {
     if (type === OfferType.START) {
@@ -67,13 +69,13 @@ export class RentalService {
       {
         Memo: {
           MemoType: convertStringToHex(RentalMemoType.TOTAL_AMOUNT.valueOf()),
-          MemoData: convertStringToHex(dto.totalAmount.toString()),
+          MemoData: floatToLEXfl(dto.totalAmount.toString()),
         },
       },
       {
         Memo: {
           MemoType: convertStringToHex(RentalMemoType.DEADLINE_TIME.valueOf()),
-          MemoData: convertStringToHex(Date.parse(dto.deadline).toString(16)),
+          MemoData: floatToLEXfl(Date.parse(dto.deadline).toString()),
         },
       },
     ];
@@ -81,7 +83,8 @@ export class RentalService {
 
   private async prepareSellOfferTx(input: URITokenInputDTO): Promise<URITokenCreateSellOffer> {
     const response: IAccountInfo = await this.xrpl.getAccountBasicInfo(input.account.address);
-    Logger.log(response);
+    const ownerNamespace = await this.hookService.getHookNamespace(input.account.address);
+    console.log(ownerNamespace);
     return {
       Account: input.account.address,
       Fee: '100',
@@ -96,7 +99,7 @@ export class RentalService {
         {
           HookParameter: {
             HookParameterName: convertStringToHex('renterNS'),
-            HookParameterValue: 'CD5E8AD773879C619B5EF5B84E921AF7607EC15C0D711806C02C7274B021B62A',
+            HookParameterValue: ownerNamespace,
           },
         },
         {
