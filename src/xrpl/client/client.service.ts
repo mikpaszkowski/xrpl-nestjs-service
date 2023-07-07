@@ -1,8 +1,9 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { Client, LedgerEntryRequest, SubmitResponse, Transaction, Wallet } from '@transia/xrpl';
+import { AccountInfoRequest, Client, SubmitResponse, Transaction, Wallet } from '@transia/xrpl';
 import { IAccount } from '../../account/interfaces/account.interface';
 import { IAccountInfo } from './interfaces/account-info.interface';
 import * as process from 'process';
+import { BaseRequest, BaseResponse } from '@transia/xrpl/dist/npm/models/methods/baseMethod';
 
 @Injectable()
 export class XrplService implements OnModuleInit, OnModuleDestroy {
@@ -21,7 +22,6 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
   }
 
   async submitTransaction(tx: Transaction, account: IAccount): Promise<SubmitResponse> {
-    console.log;
     const wallet = Wallet.fromSeed(account.secret);
     console.log(JSON.stringify(tx));
 
@@ -66,39 +66,24 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
   }
 
   async getAccountInfo(accountNumber: string) {
-    return await this.client.request({
+    const accountInfoReq: AccountInfoRequest = {
       command: 'account_info',
       account: accountNumber,
-    });
+      ledger_index: 'validated',
+    };
+    return await this.submitRequest(accountInfoReq);
   }
 
   async getAccountNamespace(accountNumber: string, namespace: string) {
-    return await this.client.request({
+    const accountNSReq = {
       command: 'account_namespace',
       account: accountNumber,
       namespace_id: namespace,
-    });
+    };
+    return await this.submitRequest(accountNSReq);
   }
 
-  async getAccountHooks(account: string) {
-    const hookReq: LedgerEntryRequest = {
-      command: 'ledger_entry',
-      hook: {
-        account: account,
-      },
-    };
-    console.log(hookReq);
-    return await this.client.request(hookReq);
-  }
-
-  async getAccountTokens(account: string) {
-    const hookReq: LedgerEntryRequest = {
-      command: 'ledger_entry',
-      uritoken: {
-        account: account,
-      },
-    };
-    console.log(hookReq);
-    return await this.client.request(hookReq);
+  async submitRequest<T extends BaseRequest, K extends BaseResponse>(requestInput: T): Promise<K> {
+    return await this.client.request<T, K>(requestInput);
   }
 }

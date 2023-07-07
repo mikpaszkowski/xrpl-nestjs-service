@@ -29,5 +29,6 @@ export class MintURITokenInputDTO {
 }
 
 export class AcceptRentalOffer extends BaseRentalInfo {
-  account: IAccount;
+  renterAccount: IAccount;
+  ownerAccount: IAccount;
 }

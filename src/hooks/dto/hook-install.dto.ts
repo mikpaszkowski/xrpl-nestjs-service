@@ -5,7 +5,7 @@ export class HookInstallOutputDTO {
   tx_hash: string;
 }
 
-export class HookInstallInputDTO {
+export class HookDeployInputDTO {
   readonly accountNumber: string;
   readonly seed: string;
   readonly grants?: HookGrant[];

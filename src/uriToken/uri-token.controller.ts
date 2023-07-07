@@ -33,6 +33,6 @@ export class UriTokenController {
 
   @Get(':address')
   async getURITokens(@Param('address') address: string) {
-    return await this.xrpl.getAccountTokens(address);
+    return await this.service.getAccountTokens(address);
   }
 }

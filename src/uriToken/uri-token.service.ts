@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { XrplService } from '../xrpl/client/client.service';
-import { SubmitResponse, URITokenMint } from '@transia/xrpl';
+import { AccountObjectsRequest, AccountObjectsResponse, SubmitResponse, URITokenMint } from '@transia/xrpl';
 import { IAccountInfo } from '../xrpl/client/interfaces/account-info.interface';
 import { MintURITokenInputDTO } from './dto/uri-token-input.dto';
 import * as process from 'process';
@@ -21,5 +21,15 @@ export class UriTokenService {
       URI: input.uri,
     };
     return this.xrpl.submitTransaction(tx, input.account);
+  }
+
+  async getAccountTokens(account: string) {
+    const tokenREq: AccountObjectsRequest = {
+      command: 'account_objects',
+      account: account,
+      ledger_index: 'validated',
+      limit: 10,
+    };
+    return await this.xrpl.submitRequest<AccountObjectsRequest, AccountObjectsResponse>(tokenREq);
   }
 }

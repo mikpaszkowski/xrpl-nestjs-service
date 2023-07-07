@@ -1,7 +1,7 @@
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put } from '@nestjs/common';
 import { HookService } from './hook.service';
 import {
-  HookInstallInputDTO,
+  HookDeployInputDTO,
   HookInstallOutputDTO,
   HookRemoveInputDTO,
   HookResetInputDTO,
@@ -12,9 +12,32 @@ export class HookController {
   constructor(private readonly service: HookService) {}
 
   @Post()
-  async deployHook(@Body() inputDTO: HookInstallInputDTO): Promise<HookInstallOutputDTO> {
+  async deployHook(@Body() inputDTO: HookDeployInputDTO): Promise<HookInstallOutputDTO> {
     try {
       const response = await this.service.install(inputDTO);
+      return {
+        tx_hash: response.result.tx_json.hash,
+        result: response.result.engine_result,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: `Hook installation on account: ${inputDTO.accountNumber} has failed`,
+        },
+        HttpStatus.BAD_REQUEST,
+        {
+          cause: err,
+        }
+      );
+    }
+  }
+
+  @Post('/grant')
+  async grantAccess(@Body() inputDTO: HookDeployInputDTO): Promise<HookInstallOutputDTO> {
+    try {
+      const response = await this.service.updateHook(inputDTO);
       return {
         tx_hash: response.result.tx_json.hash,
         result: response.result.engine_result,
@@ -83,6 +106,6 @@ export class HookController {
 
   @Get(':account')
   async accountHooks(@Param('account') account: string) {
-    return this.service.getAccountHooks(account);
+    return this.service.getListOfHooks(account);
   }
 }
