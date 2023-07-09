@@ -14,34 +14,30 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
   }
 
   async onModuleInit() {
+    console.log('Connecting to XRPL Client ...');
     await this.client.connect();
   }
 
   async onModuleDestroy() {
+    console.log('Disconnecting to XRPL Client ...');
     await this.client.disconnect();
   }
 
   async submitTransaction(tx: Transaction, account: IAccount): Promise<SubmitResponse> {
     const wallet = Wallet.fromSeed(account.secret);
-    console.log(JSON.stringify(tx));
 
     const signedTxBeforeFee = wallet.sign(tx);
-
     const feeResponse = await this.client.request({ command: 'fee', tx_blob: signedTxBeforeFee.tx_blob });
-    console.log(feeResponse?.result.drops);
 
     tx['Fee'] = feeResponse?.result?.drops?.base_fee || '1000';
-    const prepared_tx = await this.client.autofill(tx as Transaction);
-
-    const signedTxNew = wallet.sign(prepared_tx);
-    console.log(JSON.stringify(prepared_tx));
+    const signedTxNew = wallet.sign(tx);
     let submitRes;
     try {
       submitRes = await this.client.submit(signedTxNew.tx_blob);
       if (submitRes.engine_result === 'tesSUCCESS') {
         console.log('Success');
       } else {
-        console.log('Error in hook deployment');
+        console.log('Error transaction submission');
       }
     } catch (err) {
       console.error(err);

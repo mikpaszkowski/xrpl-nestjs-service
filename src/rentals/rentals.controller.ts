@@ -1,8 +1,8 @@
 import { Body, Controller, Delete, HttpException, HttpStatus, Param, Post, Query } from '@nestjs/common';
-import { AcceptRentalOffer, CancelRentalOfferDTO, URITokenInputDTO } from '../uriToken/dto/uri-token-input.dto';
 import { URITokenOutputDto } from '../uriToken/dto/uri-token-output.dto';
 import { RentalService } from './rental.service';
 import { OfferType } from './retnals.constants';
+import { AcceptRentalOffer, CancelRentalOfferDTO, FindIndexOneParam, URITokenInputDTO } from './dto/rental.dto';
 
 @Controller('rentals')
 export class RentalsController {
@@ -31,10 +31,13 @@ export class RentalsController {
     }
   }
 
-  @Delete('offers/:id')
-  async cancelOffer(@Param('id') id: string, @Body() input: CancelRentalOfferDTO): Promise<URITokenOutputDto> {
+  @Delete('offers/:index')
+  async cancelOffer(
+    @Param('index') params: FindIndexOneParam,
+    @Body() input: CancelRentalOfferDTO
+  ): Promise<URITokenOutputDto> {
     try {
-      const response = await this.service.cancelRentalOffer(id, input);
+      const response = await this.service.cancelRentalOffer(params.index, input);
       return {
         tx_hash: response.result.tx_json.hash,
         result: response.result.engine_result,
@@ -44,7 +47,7 @@ export class RentalsController {
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
-          error: `Could not cancel the sell offer: ${id}`,
+          error: `Could not cancel the sell offer: ${params.index}`,
         },
         HttpStatus.BAD_REQUEST,
         {
@@ -54,36 +57,13 @@ export class RentalsController {
     }
   }
 
-  @Post('start-offers/:uri/accept')
-  async acceptRentalOffer(@Param('uri') uri: string, @Body() input: AcceptRentalOffer): Promise<URITokenOutputDto> {
-    try {
-      const response = await this.service.acceptRentalOffer(uri, input);
-      return {
-        tx_hash: response.result.tx_json.hash,
-        result: response.result.engine_result,
-      };
-    } catch (err) {
-      console.log(err);
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: `Could not accept the rental offer of the URIToken: ${uri}.`,
-        },
-        HttpStatus.BAD_REQUEST,
-        {
-          cause: err,
-        }
-      );
-    }
-  }
-
-  @Post('return-offer/:uri/accept')
-  async acceptReturnRentalOffer(
-    @Param('uri') uri: string,
+  @Post('start-offers/:index/accept')
+  async acceptRentalOffer(
+    @Param('index') params: FindIndexOneParam,
     @Body() input: AcceptRentalOffer
   ): Promise<URITokenOutputDto> {
     try {
-      const response = await this.service.acceptReturnOffer(uri, input);
+      const response = await this.service.acceptRentalOffer(params.index, input);
       return {
         tx_hash: response.result.tx_json.hash,
         result: response.result.engine_result,
@@ -93,7 +73,33 @@ export class RentalsController {
       throw new HttpException(
         {
           status: HttpStatus.BAD_REQUEST,
-          error: `Could not accept the return rental offer of the URIToken: ${uri}`,
+          error: `Could not accept the rental offer of the URIToken: ${params.index}.`,
+        },
+        HttpStatus.BAD_REQUEST,
+        {
+          cause: err,
+        }
+      );
+    }
+  }
+
+  @Post('return-offer/:index/accept')
+  async acceptReturnRentalOffer(
+    @Param('index') params: FindIndexOneParam,
+    @Body() input: AcceptRentalOffer
+  ): Promise<URITokenOutputDto> {
+    try {
+      const response = await this.service.acceptReturnOffer(params.index, input);
+      return {
+        tx_hash: response.result.tx_json.hash,
+        result: response.result.engine_result,
+      };
+    } catch (err) {
+      console.log(err);
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: `Could not accept the return rental offer of the URIToken: ${params.index}`,
         },
         HttpStatus.BAD_REQUEST,
         {

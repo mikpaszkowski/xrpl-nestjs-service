@@ -24,12 +24,15 @@ export class UriTokenService {
   }
 
   async getAccountTokens(account: string) {
-    const tokenREq: AccountObjectsRequest = {
+    const tokenReq = {
       command: 'account_objects',
       account: account,
       ledger_index: 'validated',
+      type: 'uri_token',
       limit: 10,
     };
-    return await this.xrpl.submitRequest<AccountObjectsRequest, AccountObjectsResponse>(tokenREq);
+    return await this.xrpl.submitRequest<AccountObjectsRequest, AccountObjectsResponse>(
+      tokenReq as AccountObjectsRequest
+    );
   }
 }

@@ -1,18 +1,13 @@
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put } from '@nestjs/common';
 import { HookService } from './hook.service';
-import {
-  HookDeployInputDTO,
-  HookInstallOutputDTO,
-  HookRemoveInputDTO,
-  HookResetInputDTO,
-} from './dto/hook-install.dto';
+import { HookInputDTO, HookInstallOutputDTO } from './dto/hook-install.dto';
 
 @Controller('hook')
 export class HookController {
   constructor(private readonly service: HookService) {}
 
   @Post()
-  async deployHook(@Body() inputDTO: HookDeployInputDTO): Promise<HookInstallOutputDTO> {
+  async deployHook(@Body() inputDTO: HookInputDTO): Promise<HookInstallOutputDTO> {
     try {
       const response = await this.service.install(inputDTO);
       return {
@@ -35,7 +30,7 @@ export class HookController {
   }
 
   @Post('/grant')
-  async grantAccess(@Body() inputDTO: HookDeployInputDTO): Promise<HookInstallOutputDTO> {
+  async grantAccess(@Body() inputDTO: HookInputDTO): Promise<HookInstallOutputDTO> {
     try {
       const response = await this.service.updateHook(inputDTO);
       return {
@@ -58,10 +53,9 @@ export class HookController {
   }
 
   @Delete()
-  async deleteHook(@Body() inputDTO: HookRemoveInputDTO) {
+  async deleteHook(@Body() inputDTO: HookInputDTO) {
     try {
       const response = await this.service.remove(inputDTO);
-      console.log(response);
       return {
         tx_hash: response.result.tx_json.hash,
         result: response.result.engine_result,
@@ -82,7 +76,7 @@ export class HookController {
   }
 
   @Put('/reset')
-  async resetHook(@Body() input: HookResetInputDTO) {
+  async resetHook(@Body() input: HookInputDTO) {
     try {
       const response = await this.service.resetHook(input);
       return {

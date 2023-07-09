@@ -1,13 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { XrplService } from '../xrpl/client/client.service';
 import {
-  AcceptRentalOffer,
-  BaseRentalInfo,
-  CancelRentalOfferDTO,
-  ReturnURITokenInputDTO,
-  URITokenInputDTO,
-} from '../uriToken/dto/uri-token-input.dto';
-import {
   convertStringToHex,
   SubmitResponse,
   URITokenBuy,
@@ -21,8 +14,15 @@ import * as process from 'process';
 import { OfferType } from './retnals.constants';
 import { floatToLEXfl, iHookParamEntry, iHookParamName, iHookParamValue, StateUtility } from '@transia/hooks-toolkit';
 import { HookService } from '../hooks/hook.service';
-import { HookDeployInputDTO } from '../hooks/dto/hook-install.dto';
+import { HookInputDTO } from '../hooks/dto/hook-install.dto';
 import { AccountID } from '@transia/ripple-binary-codec/dist/types';
+import {
+  AcceptRentalOffer,
+  BaseRentalInfo,
+  CancelRentalOfferDTO,
+  ReturnURITokenInputDTO,
+  URITokenInputDTO,
+} from './dto/rental.dto';
 
 @Injectable()
 export class RentalService {
@@ -45,17 +45,17 @@ export class RentalService {
     return this.xrpl.submitTransaction(tx, input.account);
   }
 
-  async cancelRentalOffer(id: string, input: CancelRentalOfferDTO): Promise<SubmitResponse> {
-    const tx: URITokenCancelSellOffer = await this.prepareURITokenCancelOffer(id, input);
+  async cancelRentalOffer(index: string, input: CancelRentalOfferDTO): Promise<SubmitResponse> {
+    const tx: URITokenCancelSellOffer = await this.prepareURITokenCancelOffer(index, input);
     return this.xrpl.submitTransaction(tx, input.account);
   }
 
-  async acceptRentalOffer(uri: string, input: AcceptRentalOffer): Promise<SubmitResponse> {
-    const tx: URITokenBuy = await this.prepareURITokenBuy(uri, input);
+  async acceptRentalOffer(index: string, input: AcceptRentalOffer): Promise<SubmitResponse> {
+    const tx: URITokenBuy = await this.prepareURITokenBuy(index, input);
     const response = this.xrpl.submitTransaction(tx, input.renterAccount);
     const hook = await this.hookService.getAccountHook(input.ownerAccount.address);
     const hookDefinition = await StateUtility.getHookDefinition(this.xrpl.getClient(), hook.Hook.HookHash);
-    const grantHookAccessInput: HookDeployInputDTO = {
+    const grantHookAccessInput: HookInputDTO = {
       accountNumber: input.ownerAccount.address,
       seed: input.ownerAccount.secret,
       grants: [
@@ -74,8 +74,8 @@ export class RentalService {
     return response;
   }
 
-  async acceptReturnOffer(uri: string, input: AcceptRentalOffer): Promise<SubmitResponse> {
-    const tx: URITokenBuy = await this.prepareURITokenBuy(uri, input);
+  async acceptReturnOffer(index: string, input: AcceptRentalOffer): Promise<SubmitResponse> {
+    const tx: URITokenBuy = await this.prepareURITokenBuy(index, input);
     return this.xrpl.submitTransaction(tx, input.renterAccount);
   }
 
@@ -161,7 +161,7 @@ export class RentalService {
     };
   }
 
-  private async prepareURITokenBuy(uri: string, input: AcceptRentalOffer): Promise<URITokenBuy> {
+  private async prepareURITokenBuy(index: string, input: AcceptRentalOffer): Promise<URITokenBuy> {
     const response: IAccountInfo = await this.xrpl.getAccountBasicInfo(input.renterAccount.address);
     return {
       Account: input.renterAccount.address,
@@ -169,13 +169,16 @@ export class RentalService {
       Sequence: response.Sequence,
       NetworkID: parseInt(process.env.NETWORK_ID),
       TransactionType: 'URITokenBuy',
-      URITokenID: uri,
+      URITokenID: index,
       Amount: '0',
       Memos: [...this.prepareMemosForLending(input)],
     };
   }
 
-  private async prepareURITokenCancelOffer(id: string, input: CancelRentalOfferDTO): Promise<URITokenCancelSellOffer> {
+  private async prepareURITokenCancelOffer(
+    index: string,
+    input: CancelRentalOfferDTO
+  ): Promise<URITokenCancelSellOffer> {
     const response: IAccountInfo = await this.xrpl.getAccountBasicInfo(input.account.address);
     return {
       Account: input.account.address,
@@ -183,7 +186,7 @@ export class RentalService {
       Sequence: response.Sequence,
       NetworkID: parseInt(process.env.NETWORK_ID),
       TransactionType: 'URITokenCancelSellOffer',
-      URITokenID: id,
+      URITokenID: index,
       Memos: [...this.prepareMemosForLending(input)],
     };
   }

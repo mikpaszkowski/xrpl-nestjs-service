@@ -1,23 +1,23 @@
 import { HookGrant } from '@transia/xrpl/dist/npm/models/common';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class HookInstallOutputDTO {
   result: string;
   tx_hash: string;
 }
 
-export class HookDeployInputDTO {
+export class HookInputDTO {
+  @IsString()
+  @IsNotEmpty()
   readonly accountNumber: string;
+
+  @IsString()
+  @IsNotEmpty()
   readonly seed: string;
+
   readonly grants?: HookGrant[];
-}
 
-export class HookRemoveInputDTO {
-  readonly accountNumber: string;
-  readonly seed: string;
-}
-
-export class HookResetInputDTO {
-  readonly accountNumber: string;
-  readonly seed: string;
-  readonly namespace: string;
+  @IsOptional()
+  @IsString()
+  readonly namespace?: string;
 }
