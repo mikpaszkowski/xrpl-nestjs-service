@@ -44,7 +44,7 @@ export class CancelRentalOfferDTO extends BaseRentalInfo {
 
 export class FindIndexOneParam {
   @IsNotEmpty()
-  @IsString
+  @IsString()
   @Length(64, 64)
   index: string;
 }

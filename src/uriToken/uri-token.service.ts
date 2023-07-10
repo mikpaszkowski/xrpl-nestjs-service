@@ -23,7 +23,7 @@ export class UriTokenService {
     return this.xrpl.submitTransaction(tx, input.account);
   }
 
-  async getAccountTokens(account: string) {
+  async getAccountTokens(account: string): Promise<AccountObjectsResponse> {
     const tokenReq = {
       command: 'account_objects',
       account: account,
