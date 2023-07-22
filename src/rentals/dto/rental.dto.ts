@@ -1,5 +1,5 @@
 import { IAccount } from '../../account/interfaces/account.interface';
-import { IsDate, IsEnum, IsInt, IsNotEmpty, IsString, Length } from 'class-validator';
+import { IsDateString, IsEnum, IsInt, IsNotEmpty, IsString, Length } from 'class-validator';
 import { RentalType } from '../../uriToken/uri-token.constant';
 
 export class BaseRentalInfo {
@@ -7,7 +7,7 @@ export class BaseRentalInfo {
   totalAmount: number;
   @IsEnum(RentalType)
   rentalType: RentalType;
-  @IsDate()
+  @IsDateString()
   deadline: string;
 }
 
@@ -24,7 +24,6 @@ export class URITokenInputDTO extends BaseRentalInfo {
 
 export class AcceptRentalOffer extends BaseRentalInfo {
   renterAccount: IAccount;
-  ownerAccount: IAccount;
 }
 
 export class ReturnURITokenInputDTO extends BaseRentalInfo {
@@ -40,11 +39,4 @@ export class ReturnURITokenInputDTO extends BaseRentalInfo {
 
 export class CancelRentalOfferDTO extends BaseRentalInfo {
   account: IAccount;
-}
-
-export class FindIndexOneParam {
-  @IsNotEmpty()
-  @IsString()
-  @Length(64, 64)
-  index: string;
 }

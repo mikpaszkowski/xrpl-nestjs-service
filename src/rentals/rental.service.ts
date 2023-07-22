@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { XrplService } from '../xrpl/client/client.service';
 import {
   convertStringToHex,
@@ -12,9 +12,8 @@ import { RentalMemoType } from '../uriToken/uri-token.constant';
 import { IAccountInfo } from '../xrpl/client/interfaces/account-info.interface';
 import * as process from 'process';
 import { OfferType } from './retnals.constants';
-import { floatToLEXfl, iHookParamEntry, iHookParamName, iHookParamValue, StateUtility } from '@transia/hooks-toolkit';
+import { floatToLEXfl, iHookParamEntry, iHookParamName, iHookParamValue } from '@transia/hooks-toolkit';
 import { HookService } from '../hooks/hook.service';
-import { HookInputDTO } from '../hooks/dto/hook-install.dto';
 import { AccountID } from '@transia/ripple-binary-codec/dist/types';
 import {
   AcceptRentalOffer,
@@ -23,6 +22,7 @@ import {
   ReturnURITokenInputDTO,
   URITokenInputDTO,
 } from './dto/rental.dto';
+import { HookInputDTO } from '../hooks/dto/hook-input.dto';
 
 @Injectable()
 export class RentalService {
@@ -37,6 +37,26 @@ export class RentalService {
 
   private async lendURIToken(input: URITokenInputDTO): Promise<SubmitResponse> {
     const tx: URITokenCreateSellOffer = await this.prepareSellOfferTxForStart(input);
+    const hookNamespace = await this.hookService.getNamespaceIfExistsOrDefault(input.account.address);
+    const grantHookAccessInput: HookInputDTO = {
+      accountNumber: input.account.address,
+      seed: input.account.secret,
+      grants: [
+        {
+          HookGrant: {
+            HookHash: hookNamespace,
+            Authorize: input.destinationAccount,
+          },
+        },
+      ],
+    };
+    Logger.log(
+      `HookGrant sent by: ${input.account.address} for account: ${input.destinationAccount} to access namespace: ${hookDefinition.HookNamespace}`
+    );
+    const grantAccessResponse = await this.hookService.updateHook(grantHookAccessInput);
+    if (grantAccessResponse.result.engine_result !== 'tesSUCCESS') {
+      throw Error('Hook Grant access failed');
+    }
     return this.xrpl.submitTransaction(tx, input.account);
   }
 
@@ -52,26 +72,7 @@ export class RentalService {
 
   async acceptRentalOffer(index: string, input: AcceptRentalOffer): Promise<SubmitResponse> {
     const tx: URITokenBuy = await this.prepareURITokenBuy(index, input);
-    const response = this.xrpl.submitTransaction(tx, input.renterAccount);
-    const hook = await this.hookService.getAccountHook(input.ownerAccount.address);
-    const hookDefinition = await StateUtility.getHookDefinition(this.xrpl.getClient(), hook.Hook.HookHash);
-    const grantHookAccessInput: HookInputDTO = {
-      accountNumber: input.ownerAccount.address,
-      seed: input.ownerAccount.secret,
-      grants: [
-        {
-          HookGrant: {
-            HookHash: hookDefinition.HookHash,
-            Authorize: input.renterAccount.address,
-          },
-        },
-      ],
-    };
-    const grantAccessResponse = await this.hookService.updateHook(grantHookAccessInput);
-    if (grantAccessResponse.result.engine_result !== 'tesSUCCESS') {
-      throw Error('Hook Grant access failed');
-    }
-    return response;
+    return this.xrpl.submitTransaction(tx, input.renterAccount);
   }
 
   async acceptReturnOffer(index: string, input: AcceptRentalOffer): Promise<SubmitResponse> {
@@ -107,7 +108,9 @@ export class RentalService {
 
   private async prepareSellOfferTxForStart(input: URITokenInputDTO): Promise<URITokenCreateSellOffer> {
     const response: IAccountInfo = await this.xrpl.getAccountBasicInfo(input.account.address);
-    const hook = await this.hookService.getAccountHook(input.destinationAccount);
+    const hookNamespace = await this.hookService.getNamespaceIfExistsOrDefault(input.destinationAccount);
+    Logger.log(input.destinationAccount);
+    Logger.log(AccountID.from(input.destinationAccount).toHex());
     const hookParamFirst = new iHookParamEntry(
       new iHookParamName('FOREIGNACC'),
       new iHookParamValue(AccountID.from(input.destinationAccount).toHex(), true)
@@ -115,7 +118,7 @@ export class RentalService {
 
     const hookParamSecond = new iHookParamEntry(
       new iHookParamName('FOREIGNNS'),
-      new iHookParamValue(hook.Hook.HookNamespace, true)
+      new iHookParamValue(hookNamespace, true)
     );
     return {
       Account: input.account.address,
@@ -133,10 +136,7 @@ export class RentalService {
 
   private async prepareSellOfferTxForFinish(input: ReturnURITokenInputDTO): Promise<URITokenCreateSellOffer> {
     const response: IAccountInfo = await this.xrpl.getAccountBasicInfo(input.account.address);
-    const hookNamespace = await this.hookService.getNamespaceIfExistsOrDefault({
-      accountNumber: input.destinationAccount,
-      seed: '',
-    });
+    const hookNamespace = await this.hookService.getNamespaceIfExistsOrDefault(input.destinationAccount);
     const hookParamFirst = new iHookParamEntry(
       new iHookParamName('FOREIGNACC'),
       new iHookParamValue(AccountID.from(input.destinationAccount).toHex(), true)

@@ -10,7 +10,7 @@
         lhsbuf[lhsbuf_spos + i] = rhsbuf[rhsbuf_spos + i];
 
 
-int64_t hook(uint32_t reserved) {
+int64_t hook(uint32_t ctx) {
 
     TRACESTR("HOOK FIRED")
 
@@ -34,14 +34,14 @@ int64_t hook(uint32_t reserved) {
     //READING VARIABLES FROM STATE, TX and HOOKS CONTEXT to be used further
 
     uint32_t NUM_OF_RENTALS[1];
-    TRACEVAR(NUM_OF_RENTALS[0]);
     int64_t NUM_OF_RENTALS_LOOKUP = state(SBUF(NUM_OF_RENTALS), SBUF(RENTAL_IN_PROGRESS_AMOUNT_KEY));
+    TRACEVAR(NUM_OF_RENTALS[0]);
 
     uint8_t URITOKEN_TX[32];
     int64_t URITOKEN_TX_LOOKUP = otxn_field((uint32_t) (uintptr_t) URITOKEN_TX, 32, sfURITokenID);
     TRACEHEX(URITOKEN_TX);
 
-    int8_t URITOKEN_STORE[32];
+    int8_t URITOKEN_STORE[34];
     int64_t URITOKEN_STORE_LOOKUP = state(SBUF(URITOKEN_STORE), SBUF(URITOKEN_TX));
     TRACEHEX(URITOKEN_STORE_LOOKUP);
     int64_t TX_TYPE = otxn_type();
@@ -52,41 +52,53 @@ int64_t hook(uint32_t reserved) {
     // potentially break the flow and lead to takeover of asset
 
     // check if incoming transaction is HOOK_SET or ACCOUNT_DELETE which are potentially "malicious" transactions
-    if (TX_TYPE == ttACCOUNT_DELETE || TX_TYPE == ttHOOK_SET) {
-        TRACESTR("Reading number of rentals in progress from state");
-        if (NUM_OF_RENTALS[0] > 0) {
-            rollback(SBUF("[ONGOING RENTALS]: cannot mutate hook or delete account"), 10);
-        } else if (NUM_OF_RENTALS[0] < 0) {
-            TRACESTR("No rentals on this account yet");
-        }
-        if (TX_TYPE == ttACCOUNT_DELETE) TRACESTR("[NO ONGOING RENTALS]: AccountDelete tx accepted");
-        if (TX_TYPE == ttACCOUNT_DELETE) TRACESTR("[NO ONGOING RENTALS]: SetHook tx accepted");
-        accept(SBUF("Tx accepted"), (uint64_t) (uintptr_t) 0);
-    }
+//    if (TX_TYPE == ttACCOUNT_DELETE || TX_TYPE == ttHOOK_SET) {
+//        TRACESTR("Reading number of rentals in progress from state");
+//        if (NUM_OF_RENTALS[0] > 0) {
+//            rollback(SBUF("[ONGOING RENTALS]: cannot mutate hook or delete account"), 10);
+//        } else if (NUM_OF_RENTALS[0] < 0) {
+//            TRACESTR("No rentals on this account yet");
+//        }
+//        if (TX_TYPE == ttACCOUNT_DELETE) TRACESTR("[NO ONGOING RENTALS]: AccountDelete tx accepted");
+//        if (TX_TYPE == ttACCOUNT_DELETE) TRACESTR("[NO ONGOING RENTALS]: SetHook tx accepted");
+//        accept(SBUF("Tx accepted"), (uint64_t) (uintptr_t) 0);
+//    }
 
     //reading URIToken
     TRACESTR("Reading URIToken from the incoming transaction ...")
     if (TX_TYPE == ttURITOKEN_BUY) {
-        uint8_t hook_acc_id[20];
-        int64_t bytes_written = hook_account(hook_acc_id, 20);
 
-        uint8_t tx_account_id[20];
-        uint64_t readAccountIdValLength = otxn_field(SBUF(tx_account_id), sfAccount);
-
-        uint8_t is_acc_ids_equal = 0;
-
-        BUFFER_EQUAL(is_acc_ids_equal, hook_acc_id, tx_account_id, 20);
+        TRACEVAR(NUM_OF_RENTALS[0]);
+        if(NUM_OF_RENTALS[0] > 0) {
+            TRACEVAR(NUM_OF_RENTALS[0])
+            TRACESTR("NUM_OF_RENTALS greater than 0");
+        }
+        TRACEVAR(URITOKEN_STORE_LOOKUP);
+        if(URITOKEN_STORE_LOOKUP == 32) {
+            TRACEVAR(URITOKEN_STORE_LOOKUP);
+            TRACESTR("URITOKEN_LOOKUP equals to 32");
+        }
 
         //removal of URIToken only if hook's account did not fired the tx -> owner accepted the return rental offer
-        if (URITOKEN_STORE_LOOKUP == 32 && NUM_OF_RENTALS[0] > 0 && !is_acc_ids_equal) {
+        if (URITOKEN_STORE_LOOKUP == 32 && NUM_OF_RENTALS[0] > 0) {
+            TRACESTR('URIToken should be removed from the store');
             if (state_set(0, 0, SBUF(URITOKEN_TX)) < 0) {
                 TRACESTR("[INTERNAL HOOK STATE ERROR]: Could not remove the URIToken from the state");
+            }else {
+                TRACESTR("URIToken removed from the store");
             }
             TRACEVAR(NUM_OF_RENTALS[0])
-            NUM_OF_RENTALS[0] = NUM_OF_RENTALS[0] == 0 ? 0 : NUM_OF_RENTALS[0]--;
+            if(NUM_OF_RENTALS[0] <= 0) {
+                NUM_OF_RENTALS[0] = 0;
+            }else {
+                NUM_OF_RENTALS[0]--;
+            }
             TRACEVAR(NUM_OF_RENTALS[0]);
-            if (state_set(SBUF(NUM_OF_RENTALS), SBUF(RENTAL_IN_PROGRESS_AMOUNT_KEY) < 0)) {
+            if (state_set(SBUF(NUM_OF_RENTALS), SBUF(RENTAL_IN_PROGRESS_AMOUNT_KEY)) < 0) {
                 TRACESTR("[INTERNAL HOOK STATE ERROR]: Could not decrement number of rentals in state")
+            }else {
+                TRACESTR("Num of rentals decremented");
+                accept(SBUF("Finish of rental process. Tx accepted"), (uint64_t) (uintptr_t) 0);
             }
         }
     }
@@ -297,6 +309,7 @@ int64_t hook(uint32_t reserved) {
         TRACEVAR(MIN_DEADLINE_TIMESTAMP);
 //        deadline time treated as invalid only if less than min acceptable period and foreign account does not have that URI what means then it is a create lend offer
 //          where deadline time must
+        TRACEVAR(foreignRenterURIToken_lookup)
         if (deadline_val < MIN_DEADLINE_TIMESTAMP && foreignRenterURIToken_lookup < 0) {
             INVALID_DEADLINE_TIME = 1;
         }

@@ -8,3 +8,12 @@ export class IAccount {
   @IsNotEmpty()
   secret: string;
 }
+
+export interface IAccountInfoOutputDto {
+  address: string;
+  balance: string;
+  validated: boolean;
+  flags: number;
+  hookNamespaces: string[];
+  numOfHookStateData: number;
+}

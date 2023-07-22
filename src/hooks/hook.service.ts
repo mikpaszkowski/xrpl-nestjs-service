@@ -3,7 +3,7 @@ import { XrplService } from '../xrpl/client/client.service';
 import { LedgerEntryRequest, LedgerEntryResponse, SetHook, SetHookFlags, SubmitResponse } from '@transia/xrpl';
 import { readFileSync } from 'fs';
 import { createHash, randomBytes } from 'node:crypto';
-import { HookInputDTO } from './dto/hook-install.dto';
+import { HookInputDTO } from './dto/hook-input.dto';
 import * as process from 'process';
 import { Hook, HookGrant } from '@transia/xrpl/dist/npm/models/common';
 import { StateUtility } from '@transia/hooks-toolkit';
@@ -22,7 +22,7 @@ export class HookService {
   constructor(private readonly xrpl: XrplService) {}
 
   async install(input: HookInputDTO): Promise<SubmitResponse> {
-    const hookNamespace = await this.getNamespaceIfExistsOrDefault(input);
+    const hookNamespace = await this.getNamespaceIfExistsOrDefault(input.accountNumber);
     const installHook_tx: SetHook = await this.prepareSetHookTx({
       type: SetHookType.INSTALL,
       account: input.accountNumber,
@@ -34,11 +34,11 @@ export class HookService {
     });
   }
 
-  async getNamespaceIfExistsOrDefault(input: HookInputDTO): Promise<string> {
+  async getNamespaceIfExistsOrDefault(address: string): Promise<string> {
     let hookDefinition;
     let hook;
     try {
-      hook = await this.getAccountHook(input.accountNumber);
+      hook = await this.getAccountHook(address);
       hookDefinition = await StateUtility.getHookDefinition(this.xrpl.getClient(), hook.Hook.HookHash);
     } catch (err) {
       console.log(err);
@@ -87,15 +87,15 @@ export class HookService {
   //TODO fix it, account can have many hooks so we need to filter array of hooks with KNOWN HookHash of a rental hook
   async getAccountHook(accountNumber: string): Promise<Hook> {
     try {
-      const accountHooks = await this.getListOfHooks(accountNumber);
-      return accountHooks.result.node['Hooks'][0];
+      const hooks = await this.getListOfHooks(accountNumber);
+      return hooks[0];
     } catch (err) {
       console.log(err);
     }
   }
 
   async updateHook(input: HookInputDTO) {
-    const hookNamespace = await this.getNamespaceIfExistsOrDefault(input);
+    const hookNamespace = await this.getNamespaceIfExistsOrDefault(input.accountNumber);
     const updateHook_tx: SetHook = await this.prepareSetHookTx({
       type: SetHookType.UPDATE,
       account: input.accountNumber,
@@ -108,14 +108,19 @@ export class HookService {
     });
   }
 
-  async getListOfHooks(account: string) {
-    const hookReq: LedgerEntryRequest = {
-      command: 'ledger_entry',
-      hook: {
-        account: account,
-      },
-    };
-    return await this.xrpl.submitRequest<LedgerEntryRequest, LedgerEntryResponse>(hookReq);
+  async getListOfHooks(account: string): Promise<Hook[]> {
+    try {
+      const hookReq: LedgerEntryRequest = {
+        command: 'ledger_entry',
+        hook: {
+          account: account,
+        },
+      };
+      const response = await this.xrpl.submitRequest<LedgerEntryRequest, LedgerEntryResponse>(hookReq);
+      return response.result.node['Hooks'];
+    } catch (err) {
+      return [];
+    }
   }
 
   async prepareSetHookTx(input: ISetHookPrepareInput): Promise<SetHook> {
@@ -161,7 +166,7 @@ export class HookService {
           Hook: {
             ...hook_basic.Hook,
             HookNamespace: input.hookNamespace,
-            ...(input.grants && { HookGrants: input.grants }),
+            Flags: SetHookFlags.hsfNSDelete,
           },
         };
         break;

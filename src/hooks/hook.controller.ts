@@ -1,6 +1,21 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpException,
+  HttpStatus,
+  Logger,
+  Param,
+  Post,
+  Put,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { HookService } from './hook.service';
-import { HookInputDTO, HookInstallOutputDTO } from './dto/hook-install.dto';
+import { HookInputDTO, HookInstallOutputDTO } from './dto/hook-input.dto';
+import { Hook } from '@transia/xrpl/dist/npm/models/common';
+import { IAccountHookOutputDto } from './dto/hook-output.dto';
+import { isValidAddress } from '@transia/xrpl';
 
 @Controller('hook')
 export class HookController {
@@ -98,8 +113,28 @@ export class HookController {
     }
   }
 
-  @Get(':account')
-  async accountHooks(@Param('account') account: string) {
-    return this.service.getListOfHooks(account);
+  @Get(':address')
+  async accountHooks(@Param('address') address: string): Promise<IAccountHookOutputDto[]> {
+    if (!isValidAddress(address)) {
+      throw new UnprocessableEntityException('Account address is invalid');
+    }
+    Logger.log(address);
+    const response = await this.service.getListOfHooks(address);
+    Logger.log(response);
+    return response
+      ?.map((hookObj: Hook) => hookObj.Hook)
+      ?.map((hook) => {
+        return {
+          flags: hook.Flags,
+          hookHash: hook.HookHash,
+          hookNamespace: hook.HookNamespace,
+          hookGrants: hook.HookGrants?.map(({ HookGrant }) => {
+            return {
+              hookHash: HookGrant.HookHash,
+              authorize: HookGrant.Authorize,
+            };
+          }),
+        };
+      });
   }
 }

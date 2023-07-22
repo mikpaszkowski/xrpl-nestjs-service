@@ -1,5 +1,5 @@
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import { AccountInfoRequest, Client, SubmitResponse, Transaction, Wallet } from '@transia/xrpl';
+import { AccountInfoRequest, AccountInfoResponse, Client, SubmitResponse, Transaction, Wallet } from '@transia/xrpl';
 import { IAccount } from '../../account/interfaces/account.interface';
 import { IAccountInfo } from './interfaces/account-info.interface';
 import * as process from 'process';
@@ -61,13 +61,13 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
     };
   }
 
-  async getAccountInfo(accountNumber: string) {
+  async getAccountInfo(accountNumber: string): Promise<AccountInfoResponse> {
     const accountInfoReq: AccountInfoRequest = {
       command: 'account_info',
       account: accountNumber,
       ledger_index: 'validated',
     };
-    return await this.submitRequest(accountInfoReq);
+    return await this.submitRequest<AccountInfoRequest, AccountInfoResponse>(accountInfoReq);
   }
 
   async getAccountNamespace(accountNumber: string, namespace: string) {
