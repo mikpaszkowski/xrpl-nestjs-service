@@ -51,7 +51,7 @@ export class RentalService {
       ],
     };
     Logger.log(
-      `HookGrant sent by: ${input.account.address} for account: ${input.destinationAccount} to access namespace: ${hookDefinition.HookNamespace}`
+      `HookGrant sent by: ${input.account.address} for account: ${input.destinationAccount} to access namespace: ${hookNamespace}`
     );
     const grantAccessResponse = await this.hookService.updateHook(grantHookAccessInput);
     if (grantAccessResponse.result.engine_result !== 'tesSUCCESS') {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { XrplService } from '../xrpl/client/client.service';
 import { LedgerEntryRequest, LedgerEntryResponse, SetHook, SetHookFlags, SubmitResponse } from '@transia/xrpl';
 import { readFileSync } from 'fs';
@@ -41,9 +41,8 @@ export class HookService {
       hook = await this.getAccountHook(address);
       hookDefinition = await StateUtility.getHookDefinition(this.xrpl.getClient(), hook.Hook.HookHash);
     } catch (err) {
-      console.log(err);
+      throw Error('Error in getting Hook');
     }
-
     const randomBytesForNS = randomBytes(32);
     const HOOK_NS = createHash('sha256').update(randomBytesForNS).digest('hex').toUpperCase();
     if (hook === undefined) {
@@ -90,7 +89,7 @@ export class HookService {
       const hooks = await this.getListOfHooks(accountNumber);
       return hooks[0];
     } catch (err) {
-      console.log(err);
+      Logger.error(err);
     }
   }
 

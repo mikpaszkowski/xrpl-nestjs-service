@@ -5,7 +5,6 @@ import {
   Get,
   HttpException,
   HttpStatus,
-  Logger,
   Param,
   Post,
   Put,
@@ -23,25 +22,11 @@ export class HookController {
 
   @Post()
   async deployHook(@Body() inputDTO: HookInputDTO): Promise<HookInstallOutputDTO> {
-    try {
-      const response = await this.service.install(inputDTO);
-      return {
-        tx_hash: response.result.tx_json.hash,
-        result: response.result.engine_result,
-      };
-    } catch (err) {
-      console.log(err);
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: `Hook installation on account: ${inputDTO.accountNumber} has failed`,
-        },
-        HttpStatus.BAD_REQUEST,
-        {
-          cause: err,
-        }
-      );
-    }
+    const result: any = await this.service.install(inputDTO);
+    return {
+      tx_hash: result.response.tx_json.hash,
+      result: result.response.engine_result,
+    };
   }
 
   @Post('/grant')
@@ -118,9 +103,7 @@ export class HookController {
     if (!isValidAddress(address)) {
       throw new UnprocessableEntityException('Account address is invalid');
     }
-    Logger.log(address);
     const response = await this.service.getListOfHooks(address);
-    Logger.log(response);
     return response
       ?.map((hookObj: Hook) => hookObj.Hook)
       ?.map((hook) => {
