@@ -24,6 +24,8 @@
     "@nestjs/config": "^3.0.0",
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
+    "@nestjs/swagger": "^7.1.2",
+    "@openapitools/openapi-generator-cli": "^2.7.0",
     "@transia/hooks-toolkit": "^1.0.3",
     "@transia/xrpl": "^2.7.3-alpha.5",
     "class-transformer": "^0.5.1",

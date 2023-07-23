@@ -23,10 +23,10 @@ export class UriTokenController {
   @Post('mint')
   async mintURIToken(@Body() input: MintURITokenInputDTO): Promise<XRPLBaseResponse> {
     try {
-      const response = await this.service.mintURIToken(input);
+      const result: any = await this.service.mintURIToken(input);
       return {
-        tx_hash: response.result.tx_json.hash,
-        result: response.result.engine_result,
+        tx_hash: result.response.tx_json.hash,
+        result: result.response.engine_result,
       };
     } catch (err) {
       console.log(err);

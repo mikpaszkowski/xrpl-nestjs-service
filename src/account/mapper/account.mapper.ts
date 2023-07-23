@@ -1,8 +1,8 @@
 import { AccountInfoResponse } from '@transia/xrpl';
-import { IAccountInfoOutputDto } from '../interfaces/account.interface';
+import { AccountInfoOutputDto } from '../interfaces/account.interface';
 
 export const AccountMapper = {
-  accountInfoResponseToDto: (accountInfoResponse: AccountInfoResponse): IAccountInfoOutputDto => {
+  accountInfoResponseToDto: (accountInfoResponse: AccountInfoResponse): AccountInfoOutputDto => {
     return {
       flags: accountInfoResponse.result.account_data.Flags,
       address: accountInfoResponse.result.account_data.Account,

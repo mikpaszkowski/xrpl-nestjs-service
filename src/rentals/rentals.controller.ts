@@ -10,71 +10,29 @@ export class RentalsController {
 
   @Post('offers')
   async createLendOffer(@Query('type') type: OfferType, @Body() input: URITokenInputDTO): Promise<XRPLBaseResponse> {
-    try {
-      const response = await this.service.createOffer(type, input);
-      return {
-        tx_hash: response.result.tx_json.hash,
-        result: response.result.engine_result,
-      };
-    } catch (err) {
-      console.log(err);
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: `Could not create offer to lend the URIToken: ${input.uri} for account: ${input.destinationAccount}`,
-        },
-        HttpStatus.BAD_REQUEST,
-        {
-          cause: err,
-        }
-      );
-    }
+    const result: any = await this.service.createOffer(type, input);
+    return {
+      tx_hash: result.response.tx_json.hash,
+      result: result.response.engine_result,
+    };
   }
 
   @Delete('offers/:index')
   async cancelOffer(@Param('index') index: string, @Body() input: CancelRentalOfferDTO): Promise<XRPLBaseResponse> {
-    try {
-      const response = await this.service.cancelRentalOffer(index, input);
-      return {
-        tx_hash: response.result.tx_json.hash,
-        result: response.result.engine_result,
-      };
-    } catch (err) {
-      console.log(err);
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: `Could not cancel the sell offer: ${index}`,
-        },
-        HttpStatus.BAD_REQUEST,
-        {
-          cause: err,
-        }
-      );
-    }
+    const result: any = await this.service.cancelRentalOffer(index, input);
+    return {
+      tx_hash: result.response.tx_json.hash,
+      result: result.response.engine_result,
+    };
   }
 
   @Post('start-offers/:index/accept')
   async acceptRentalOffer(@Param('index') index: string, @Body() input: AcceptRentalOffer): Promise<XRPLBaseResponse> {
-    try {
-      const response = await this.service.acceptRentalOffer(index, input);
-      return {
-        tx_hash: response.result.tx_json.hash,
-        result: response.result.engine_result,
-      };
-    } catch (err) {
-      console.log(err);
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: `Could not accept the rental offer of the URIToken: ${index}.`,
-        },
-        HttpStatus.BAD_REQUEST,
-        {
-          cause: err,
-        }
-      );
-    }
+    const result: any = await this.service.acceptRentalOffer(index, input);
+    return {
+      tx_hash: result.response.tx_json.hash,
+      result: result.response.engine_result,
+    };
   }
 
   @Post('return-offer/:index/accept')
@@ -82,24 +40,10 @@ export class RentalsController {
     @Param('index') index: string,
     @Body() input: AcceptRentalOffer
   ): Promise<XRPLBaseResponse> {
-    try {
-      const response = await this.service.acceptReturnOffer(index, input);
-      return {
-        tx_hash: response.result.tx_json.hash,
-        result: response.result.engine_result,
-      };
-    } catch (err) {
-      console.log(err);
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: `Could not accept the return rental offer of the URIToken: ${index}`,
-        },
-        HttpStatus.BAD_REQUEST,
-        {
-          cause: err,
-        }
-      );
-    }
+    const result: any = await this.service.acceptReturnOffer(index, input);
+    return {
+      tx_hash: result.response.tx_json.hash,
+      result: result.response.engine_result,
+    };
   }
 }

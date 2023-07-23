@@ -1,0 +1,13 @@
+.openapi-generator-ignore
+Apis/DefaultApi.md
+Models/AcceptRentalOffer.md
+Models/Account.md
+Models/AccountInfoOutputDto.md
+Models/CancelRentalOfferDTO.md
+Models/HookInputDTO.md
+Models/HookInstallOutputDTO.md
+Models/MintURITokenInputDTO.md
+Models/URITokenInputDTO.md
+Models/URITokenOutputDTO.md
+Models/XRPLBaseResponse.md
+README.md

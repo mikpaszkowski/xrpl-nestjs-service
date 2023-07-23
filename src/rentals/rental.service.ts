@@ -9,7 +9,6 @@ import {
 } from '@transia/xrpl';
 import { Memo } from '@transia/xrpl/dist/npm/models/common';
 import { RentalMemoType } from '../uriToken/uri-token.constant';
-import { IAccountInfo } from '../xrpl/client/interfaces/account-info.interface';
 import * as process from 'process';
 import { OfferType } from './retnals.constants';
 import { floatToLEXfl, iHookParamEntry, iHookParamName, iHookParamValue } from '@transia/hooks-toolkit';
@@ -37,6 +36,7 @@ export class RentalService {
 
   private async lendURIToken(input: URITokenInputDTO): Promise<SubmitResponse> {
     const tx: URITokenCreateSellOffer = await this.prepareSellOfferTxForStart(input);
+    const hook = await this.hookService.getAccountHook(input.account.address);
     const hookNamespace = await this.hookService.getNamespaceIfExistsOrDefault(input.account.address);
     const grantHookAccessInput: HookInputDTO = {
       accountNumber: input.account.address,
@@ -44,7 +44,7 @@ export class RentalService {
       grants: [
         {
           HookGrant: {
-            HookHash: hookNamespace,
+            HookHash: hook.Hook.HookHash,
             Authorize: input.destinationAccount,
           },
         },
@@ -53,8 +53,8 @@ export class RentalService {
     Logger.log(
       `HookGrant sent by: ${input.account.address} for account: ${input.destinationAccount} to access namespace: ${hookNamespace}`
     );
-    const grantAccessResponse = await this.hookService.updateHook(grantHookAccessInput);
-    if (grantAccessResponse.result.engine_result !== 'tesSUCCESS') {
+    const grantAccessResult: any = await this.hookService.updateHook(grantHookAccessInput);
+    if (grantAccessResult.response.engine_result !== 'tesSUCCESS') {
       throw Error('Hook Grant access failed');
     }
     return this.xrpl.submitTransaction(tx, input.account);
@@ -107,7 +107,6 @@ export class RentalService {
   }
 
   private async prepareSellOfferTxForStart(input: URITokenInputDTO): Promise<URITokenCreateSellOffer> {
-    const response: IAccountInfo = await this.xrpl.getAccountBasicInfo(input.account.address);
     const hookNamespace = await this.hookService.getNamespaceIfExistsOrDefault(input.destinationAccount);
     Logger.log(input.destinationAccount);
     Logger.log(AccountID.from(input.destinationAccount).toHex());
@@ -122,8 +121,6 @@ export class RentalService {
     );
     return {
       Account: input.account.address,
-      Fee: '100',
-      Sequence: response.Sequence,
       NetworkID: parseInt(process.env.NETWORK_ID),
       TransactionType: 'URITokenCreateSellOffer',
       URITokenID: input.uri,
@@ -135,7 +132,6 @@ export class RentalService {
   }
 
   private async prepareSellOfferTxForFinish(input: ReturnURITokenInputDTO): Promise<URITokenCreateSellOffer> {
-    const response: IAccountInfo = await this.xrpl.getAccountBasicInfo(input.account.address);
     const hookNamespace = await this.hookService.getNamespaceIfExistsOrDefault(input.destinationAccount);
     const hookParamFirst = new iHookParamEntry(
       new iHookParamName('FOREIGNACC'),
@@ -149,8 +145,6 @@ export class RentalService {
 
     return {
       Account: input.account.address,
-      Fee: '1000',
-      Sequence: response.Sequence,
       NetworkID: parseInt(process.env.NETWORK_ID),
       TransactionType: 'URITokenCreateSellOffer',
       URITokenID: input.uri,
@@ -162,11 +156,8 @@ export class RentalService {
   }
 
   private async prepareURITokenBuy(index: string, input: AcceptRentalOffer): Promise<URITokenBuy> {
-    const response: IAccountInfo = await this.xrpl.getAccountBasicInfo(input.renterAccount.address);
     return {
       Account: input.renterAccount.address,
-      Fee: '1000',
-      Sequence: response.Sequence,
       NetworkID: parseInt(process.env.NETWORK_ID),
       TransactionType: 'URITokenBuy',
       URITokenID: index,
@@ -179,11 +170,8 @@ export class RentalService {
     index: string,
     input: CancelRentalOfferDTO
   ): Promise<URITokenCancelSellOffer> {
-    const response: IAccountInfo = await this.xrpl.getAccountBasicInfo(input.account.address);
     return {
       Account: input.account.address,
-      Fee: '1000',
-      Sequence: response.Sequence,
       NetworkID: parseInt(process.env.NETWORK_ID),
       TransactionType: 'URITokenCancelSellOffer',
       URITokenID: index,

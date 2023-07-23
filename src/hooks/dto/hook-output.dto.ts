@@ -6,4 +6,11 @@ export type IAccountHookOutputDto = {
   }>;
   hookNamespace?: string;
   flags?: number;
+  hookState?: HookState[];
 };
+
+export interface HookState {
+  index: string;
+  key: string;
+  data: string;
+}

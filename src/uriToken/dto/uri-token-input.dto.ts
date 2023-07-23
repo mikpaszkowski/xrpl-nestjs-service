@@ -1,8 +1,8 @@
-import { IAccount } from '../../account/interfaces/account.interface';
+import { Account } from '../../account/interfaces/account.interface';
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class MintURITokenInputDTO {
-  account: IAccount;
+  account: Account;
   @IsString()
   @IsNotEmpty()
   uri: string;

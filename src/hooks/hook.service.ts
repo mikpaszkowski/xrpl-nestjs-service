@@ -36,17 +36,16 @@ export class HookService {
 
   async getNamespaceIfExistsOrDefault(address: string): Promise<string> {
     let hookDefinition;
-    let hook;
+    const hook = await this.getAccountHook(address);
     try {
-      hook = await this.getAccountHook(address);
       hookDefinition = await StateUtility.getHookDefinition(this.xrpl.getClient(), hook.Hook.HookHash);
     } catch (err) {
-      throw Error('Error in getting Hook');
+      Logger.warn(err?.message);
     }
-    const randomBytesForNS = randomBytes(32);
-    const HOOK_NS = createHash('sha256').update(randomBytesForNS).digest('hex').toUpperCase();
+
     if (hook === undefined) {
-      return HOOK_NS;
+      const randomBytesForNS = randomBytes(32);
+      return createHash('sha256').update(randomBytesForNS).digest('hex').toUpperCase();
     }
     if (this.doesAccountHaveExistingHookWithEmptyNS(hook, hookDefinition) && hookDefinition) {
       return hookDefinition.HookNamespace;
@@ -123,12 +122,9 @@ export class HookService {
   }
 
   async prepareSetHookTx(input: ISetHookPrepareInput): Promise<SetHook> {
-    const response = await this.xrpl.getAccountBasicInfo(input.account);
     const tx_basic: SetHook = {
       Account: input.account,
       TransactionType: 'SetHook',
-      Fee: '200000',
-      Sequence: response.Sequence,
       NetworkID: parseInt(process.env.NETWORK_ID),
       Hooks: [],
     };
