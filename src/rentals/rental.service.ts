@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { XrplService } from '../xrpl/client/client.service';
 import {
   convertStringToHex,
+  LedgerEntryRequest,
+  LedgerEntryResponse,
   SubmitResponse,
   URITokenBuy,
   URITokenCancelSellOffer,
@@ -156,6 +158,21 @@ export class RentalService {
   }
 
   private async prepareURITokenBuy(index: string, input: AcceptRentalOffer): Promise<URITokenBuy> {
+    let ownerAccountAddress;
+    try {
+      const hookReq: LedgerEntryRequest = {
+        command: 'ledger_entry',
+        index,
+      };
+      const response = await this.xrpl.submitRequest<LedgerEntryRequest, LedgerEntryResponse>(hookReq);
+      ownerAccountAddress = response.result.node['Owner'];
+    } catch (err) {
+      console.log(err);
+    }
+    const hookParamFirst = new iHookParamEntry(
+      new iHookParamName('FOREIGNACC'),
+      new iHookParamValue(AccountID.from(ownerAccountAddress).toHex(), true)
+    );
     return {
       Account: input.renterAccount.address,
       NetworkID: parseInt(process.env.NETWORK_ID),
@@ -163,6 +180,7 @@ export class RentalService {
       URITokenID: index,
       Amount: '0',
       Memos: [...this.prepareMemosForLending(input)],
+      HookParameters: [hookParamFirst.toXrpl()],
     };
   }
 

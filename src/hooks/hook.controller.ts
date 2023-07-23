@@ -65,12 +65,16 @@ export class HookController {
   }
 
   async getHookNSInternalState(address: string, namespace: string): Promise<HookState[]> {
-    return (await this.xrpl.getAccountNamespace(address, namespace)).result.namespace_entries.map((entry) => {
-      return {
-        index: entry['index'],
-        key: entry['HookStateKey'],
-        data: entry['HookStateData'],
-      } as HookState;
-    });
+    try {
+      return (await this.xrpl.getAccountNamespace(address, namespace)).result.namespace_entries.map((entry) => {
+        return {
+          index: entry['index'],
+          key: entry['HookStateKey'],
+          data: entry['HookStateData'],
+        } as HookState;
+      });
+    } catch (err) {
+      return [];
+    }
   }
 }

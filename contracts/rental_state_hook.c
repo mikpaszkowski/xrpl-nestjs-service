@@ -386,6 +386,8 @@ int64_t hook(uint32_t ctx) {
                 }
                 TRACESTR("New NFTokenID saved to the store");
                 int64_t amount_in_drops = AMOUNT_TO_DROPS(rental_total_amount_val);
+                TRACEVAR(amount_in_drops);
+                TRACEHEX(amount_in_drops);
                 if(amount_in_drops < 0) {
                     TRACESTR('[HOOK INTERNAL ERROR]: Could not transform amount to drops');
                 }else {
@@ -396,13 +398,14 @@ int64_t hook(uint32_t ctx) {
                     // create a buffer to write the emitted transaction into
                     unsigned char tx[PREPARE_PAYMENT_SIMPLE_SIZE];
 
-                    // we will use an XRP payment macro, this will populate the buffer with a serialized binary transaction
-                    // Parameter list: ( buf_out, drops_amount, to_address, dest_tag, src_tag )
                     PREPARE_PAYMENT_SIMPLE(tx, amount_in_drops, foreignAccForPayment, 0, 0);
 
                     // emit the transaction
                     uint8_t emit_tx_hash[32];
                     int64_t emit_result = emit(SBUF(emit_tx_hash), SBUF(tx));
+                    if(emit_result < 0) {
+                        TRACESTR('Failed to emit Payment!');
+                    }
                     TRACEVAR(emit_result);
                 }
                 accept(SBUF("Tx accepted"), (uint64_t) (uintptr_t) 0);
