@@ -10,6 +10,17 @@
         lhsbuf[lhsbuf_spos + i] = rhsbuf[rhsbuf_spos + i];
 
 
+int64_t cbak(uint32_t ctx)
+{
+    TRACESTR("Callback called.");
+    if(ctx == 0) {
+        TRACESTR("Payment tx was successfully accepted into a ledger");
+    } else {
+        TRACESTR("Payment tx was not successfully accepted into a ledger");
+    }
+    return 0;
+}
+
 int64_t hook(uint32_t ctx) {
 
     TRACESTR("HOOK FIRED")
@@ -374,6 +385,26 @@ int64_t hook(uint32_t ctx) {
                     rollback(SBUF("Error: could not set state!"), 1);
                 }
                 TRACESTR("New NFTokenID saved to the store");
+                int64_t amount_in_drops = AMOUNT_TO_DROPS(rental_total_amount_val);
+                if(amount_in_drops < 0) {
+                    TRACESTR('[HOOK INTERNAL ERROR]: Could not transform amount to drops');
+                }else {
+                    uint8_t foreignAccForPayment[20];
+                    uint8_t account_param_name[] = {'F', 'O', 'R', 'E', 'I', 'G', 'N', 'A', 'C', 'C'};
+                    int64_t renterAccountId_lookup = otxn_param(SBUF(foreignAccForPayment), SBUF(account_param_name));
+                    TRACEHEX(foreignAccForPayment);
+                    // create a buffer to write the emitted transaction into
+                    unsigned char tx[PREPARE_PAYMENT_SIMPLE_SIZE];
+
+                    // we will use an XRP payment macro, this will populate the buffer with a serialized binary transaction
+                    // Parameter list: ( buf_out, drops_amount, to_address, dest_tag, src_tag )
+                    PREPARE_PAYMENT_SIMPLE(tx, amount_in_drops, foreignAccForPayment, 0, 0);
+
+                    // emit the transaction
+                    uint8_t emit_tx_hash[32];
+                    int64_t emit_result = emit(SBUF(emit_tx_hash), SBUF(tx));
+                    TRACEVAR(emit_result);
+                }
                 accept(SBUF("Tx accepted"), (uint64_t) (uintptr_t) 0);
             }
         }

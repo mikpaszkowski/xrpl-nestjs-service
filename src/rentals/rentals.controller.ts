@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, HttpException, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Param, Post, Query } from '@nestjs/common';
 import { RentalService } from './rental.service';
 import { OfferType } from './retnals.constants';
 import { AcceptRentalOffer, CancelRentalOfferDTO, URITokenInputDTO } from './dto/rental.dto';
