@@ -23,7 +23,6 @@ import {
   ValidationError,
 } from '@transia/xrpl';
 import { Account } from '../../account/interfaces/account.interface';
-import { IAccountInfo } from './interfaces/account-info.interface';
 import * as process from 'process';
 import { BaseRequest, BaseResponse } from '@transia/xrpl/dist/npm/models/methods/baseMethod';
 import {

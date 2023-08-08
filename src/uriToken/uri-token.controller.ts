@@ -1,13 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpException,
-  HttpStatus,
-  Param,
-  Post,
-  UnprocessableEntityException,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, UnprocessableEntityException } from '@nestjs/common';
 import { UriTokenService } from './uri-token.service';
 import { MintURITokenInputDTO } from './dto/uri-token-input.dto';
 import { URITokenOutputDTO, XRPLBaseResponse } from './dto/uri-token-output.dto';
@@ -22,25 +13,11 @@ export class UriTokenController {
 
   @Post('mint')
   async mintURIToken(@Body() input: MintURITokenInputDTO): Promise<XRPLBaseResponse> {
-    try {
-      const result: any = await this.service.mintURIToken(input);
-      return {
-        tx_hash: result.response.tx_json.hash,
-        result: result.response.engine_result,
-      };
-    } catch (err) {
-      console.log(err);
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: `Could not mint the URIToken: ${input.uri}`,
-        },
-        HttpStatus.BAD_REQUEST,
-        {
-          cause: err,
-        }
-      );
-    }
+    const result: any = await this.service.mintURIToken(input);
+    return {
+      tx_hash: result.response.tx_json.hash,
+      result: result.response.engine_result,
+    };
   }
 
   @Get(':address')

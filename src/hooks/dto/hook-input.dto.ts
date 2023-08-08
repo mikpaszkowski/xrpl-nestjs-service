@@ -13,7 +13,7 @@ export class HookInputDTO {
 
   @IsString()
   @IsNotEmpty()
-  readonly seed: string;
+  readonly secret: string;
 
   readonly grants?: HookGrant[];
 

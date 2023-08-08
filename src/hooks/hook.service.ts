@@ -30,7 +30,7 @@ export class HookService {
     });
     return await this.xrpl.submitTransaction(installHook_tx, {
       address: input.accountNumber,
-      secret: input.seed,
+      secret: input.secret,
     });
   }
 
@@ -38,7 +38,7 @@ export class HookService {
     let hookDefinition;
     const hook = await this.getAccountHook(address);
     try {
-      hookDefinition = await StateUtility.getHookDefinition(this.xrpl.getClient(), hook.Hook.HookHash);
+      hookDefinition = await StateUtility.getHookDefinition(this.xrpl.getClient(), hook?.Hook?.HookHash);
     } catch (err) {
       Logger.warn(err?.message);
     }
@@ -66,7 +66,7 @@ export class HookService {
     });
     return await this.xrpl.submitTransaction(removeHook_tx, {
       address: input.accountNumber,
-      secret: input.seed,
+      secret: input.secret,
     });
   }
 
@@ -78,12 +78,12 @@ export class HookService {
     });
     return await this.xrpl.submitTransaction(resetHook_tx, {
       address: input.accountNumber,
-      secret: input.seed,
+      secret: input.secret,
     });
   }
 
   //TODO fix it, account can have many hooks so we need to filter array of hooks with KNOWN HookHash of a rental hook
-  async getAccountHook(accountNumber: string): Promise<Hook> {
+  async getAccountHook(accountNumber: string): Promise<Hook | undefined> {
     try {
       const hooks = await this.getListOfHooks(accountNumber);
       return hooks[0];
@@ -102,7 +102,7 @@ export class HookService {
     });
     return await this.xrpl.submitTransaction(updateHook_tx, {
       address: input.accountNumber,
-      secret: input.seed,
+      secret: input.secret,
     });
   }
 

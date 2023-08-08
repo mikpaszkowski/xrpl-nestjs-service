@@ -42,7 +42,7 @@ export class RentalService {
     const hookNamespace = await this.hookService.getNamespaceIfExistsOrDefault(input.account.address);
     const grantHookAccessInput: HookInputDTO = {
       accountNumber: input.account.address,
-      seed: input.account.secret,
+      secret: input.account.secret,
       grants: [
         {
           HookGrant: {
@@ -110,8 +110,6 @@ export class RentalService {
 
   private async prepareSellOfferTxForStart(input: URITokenInputDTO): Promise<URITokenCreateSellOffer> {
     const hookNamespace = await this.hookService.getNamespaceIfExistsOrDefault(input.destinationAccount);
-    Logger.log(input.destinationAccount);
-    Logger.log(AccountID.from(input.destinationAccount).toHex());
     const hookParamFirst = new iHookParamEntry(
       new iHookParamName('FOREIGNACC'),
       new iHookParamValue(AccountID.from(input.destinationAccount).toHex(), true)
