@@ -1,8 +1,8 @@
-import HookState from '@transia/xrpl/dist/npm/models/ledger/URIToken';
 import { URITokenOutputDTO } from '../dto/uri-token-output.dto';
+import { URIToken } from '@transia/xrpl/dist/npm/models/ledger';
 
 export const UriTokenMapper = {
-  mapUriTokenToDto: (ledgerObj: HookState) => {
+  mapUriTokenToDto: (ledgerObj: URIToken & { Flags: number }): URITokenOutputDTO => {
     return {
       index: ledgerObj.index,
       uri: ledgerObj.URI,
@@ -11,6 +11,7 @@ export const UriTokenMapper = {
       destination: ledgerObj.Destination,
       amount: ledgerObj.Amount,
       digest: ledgerObj.Digest,
+      flags: ledgerObj.Flags || 0,
     } as URITokenOutputDTO;
   },
 };

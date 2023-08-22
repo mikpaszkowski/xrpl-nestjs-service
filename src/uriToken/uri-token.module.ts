@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { XrplService } from '../xrpl/client/client.service';
 import { UriTokenController } from './uri-token.controller';
-import { UriTokenService } from './uri-token.service';
+import { URITokenService } from './uri-token-service-impl.service';
 
 @Module({
   controllers: [UriTokenController],
-  providers: [UriTokenService, XrplService],
+  providers: [URITokenService, XrplService],
 })
 export class UriTokenModule {}

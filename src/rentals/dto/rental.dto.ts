@@ -23,8 +23,13 @@ export class URITokenInputDTO extends BaseRentalInfo {
   uri: string;
 }
 
-export class AcceptRentalOffer extends BaseRentalInfo {
+export class AcceptRentalOffer {
   renterAccount: Account;
+  @IsDateString()
+  deadline: string;
+  @IsInt()
+  @IsPositive()
+  totalAmount: number;
 }
 
 export class ReturnURITokenInputDTO extends BaseRentalInfo {
@@ -38,6 +43,6 @@ export class ReturnURITokenInputDTO extends BaseRentalInfo {
   uri: string;
 }
 
-export class CancelRentalOfferDTO extends BaseRentalInfo {
+export class CancelRentalOfferDTO {
   account: Account;
 }

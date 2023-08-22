@@ -9,7 +9,7 @@ export class HookInstallOutputDTO {
 export class HookInputDTO {
   @IsString()
   @IsNotEmpty()
-  readonly accountNumber: string;
+  readonly address: string;
 
   @IsString()
   @IsNotEmpty()

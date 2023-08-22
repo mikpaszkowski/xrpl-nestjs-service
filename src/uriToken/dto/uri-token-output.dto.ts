@@ -1,4 +1,4 @@
-export class XRPLBaseResponse {
+export class XRPLBaseResponseDTO {
   result: string;
   tx_hash: string;
 }
@@ -11,4 +11,5 @@ export class URITokenOutputDTO {
   destination: string;
   amount: string;
   digest: string;
+  flags: number;
 }

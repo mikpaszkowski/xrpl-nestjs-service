@@ -5,6 +5,7 @@ import { Hook } from '@transia/xrpl/dist/npm/models/common';
 import { HookState, IAccountHookOutputDto } from './dto/hook-output.dto';
 import { isValidAddress } from '@transia/xrpl';
 import { XrplService } from '../xrpl/client/client.service';
+import { mapXRPLBaseResponseToDto } from '../common/api.utils';
 
 @Controller('hook')
 export class HookController {
@@ -13,28 +14,19 @@ export class HookController {
   @Post()
   async deployHook(@Body() inputDTO: HookInputDTO): Promise<HookInstallOutputDTO> {
     const result: any = await this.service.install(inputDTO);
-    return {
-      tx_hash: result.response.tx_json.hash,
-      result: result.response.engine_result,
-    };
+    return mapXRPLBaseResponseToDto(result);
   }
 
   @Delete()
-  async deleteHook(@Body() inputDTO: HookInputDTO) {
+  async deleteHook(@Body() inputDTO: HookInputDTO): Promise<HookInstallOutputDTO> {
     const result: any = await this.service.remove(inputDTO);
-    return {
-      tx_hash: result.response.tx_json.hash,
-      result: result.response.engine_result,
-    };
+    return mapXRPLBaseResponseToDto(result);
   }
 
   @Put('/reset')
-  async resetHook(@Body() input: HookInputDTO) {
-    const result: any = await this.service.resetHook(input);
-    return {
-      tx_hash: result.response.tx_json.hash,
-      result: result.response.engine_result,
-    };
+  async resetHook(@Body() inputDTO: HookInputDTO) {
+    const result: any = await this.service.resetHook(inputDTO);
+    return mapXRPLBaseResponseToDto(result);
   }
 
   @Get(':address')

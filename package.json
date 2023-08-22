@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
-    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format": "prettier --write \\\"src/**/*.ts\\\" \\\"test-e2e/**/*.ts\\\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -17,7 +17,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config test-e2e/jest-e2e.json",
+    "test:it": "jest --config test-it/jest-it.json"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -28,6 +29,7 @@
     "@openapitools/openapi-generator-cli": "^2.7.0",
     "@transia/hooks-toolkit": "^1.0.3",
     "@transia/xrpl": "^2.7.3-alpha.5",
+    "buffer": "^6.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "crypto-js": "^4.1.1",
@@ -37,6 +39,7 @@
     "xrpl-accountlib": "^2.2.0"
   },
   "devDependencies": {
+    "@automock/jest": "^1.4.0",
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.5",

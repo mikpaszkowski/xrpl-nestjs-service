@@ -5,8 +5,6 @@ import {
   Injectable,
   Logger,
   NotFoundException,
-  OnModuleDestroy,
-  OnModuleInit,
   ServiceUnavailableException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -37,33 +35,17 @@ import { BaseTransaction } from '@transia/xrpl/dist/npm/models/transactions/comm
 import { IHookNamespaceInfo } from './interfaces/namespace.interface';
 
 @Injectable()
-export class XrplService implements OnModuleInit, OnModuleDestroy {
+export class XrplService {
   private readonly TX_REJECTED_BY_HOOK_CODE = 'tecHOOK_REJECTED';
 
-  private readonly client = new Client(process.env.SERVER_API_ENDPOINT);
-  private readonly xrpl_client = new XrplClient(process.env.SERVER_API_ENDPOINT);
+  private readonly client = new Client(process.env.SERVER_API_ENDPOINT || 'wss://hooks-testnet-v3.xrpl-labs.com');
+  private readonly xrpl_client = new XrplClient(
+    process.env.SERVER_API_ENDPOINT || 'wss://hooks-testnet-v3.xrpl-labs.com'
+  );
 
-  public getClient(): Client {
+  public async getClient(): Promise<Client> {
+    await this.client.connect();
     return this.client;
-  }
-
-  async onModuleInit() {
-    try {
-      await this.client.connect();
-      await this.xrpl_client.ready();
-      Logger.log('Connected to XRPL client with success');
-    } catch (err) {
-      Logger.error(`Connection to XRPL client failed: ${err.data.message}`);
-    }
-  }
-
-  async onModuleDestroy() {
-    try {
-      await this.client.disconnect();
-      this.xrpl_client.close();
-    } catch (err) {
-      Logger.log('Disconnecting to XRPL Client ...');
-    }
   }
 
   async submitTransaction(tx: Transaction, account: Account): Promise<SubmitResponse> {
@@ -153,7 +135,7 @@ export class XrplService implements OnModuleInit, OnModuleDestroy {
 
   async submitRequest<T extends BaseRequest, K extends BaseResponse>(requestInput: T): Promise<K> {
     try {
-      return await this.client.request<T, K>(requestInput);
+      return await (await this.getClient()).request<T, K>(requestInput);
     } catch (err) {
       if (XRPL_INTERNAL_ERRORS.includes(err.name)) {
         throw new NotFoundException(
