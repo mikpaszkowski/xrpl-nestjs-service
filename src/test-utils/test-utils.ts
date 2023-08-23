@@ -58,3 +58,9 @@ export const getDeadlineDate = (days: number): Date => {
   date.setDate(new Date().getDate() + days);
   return date;
 };
+
+export const getFutureDateIncreasedWith = (seconds: number): Date => {
+  const date = new Date();
+  date.setSeconds(new Date().getSeconds() + seconds);
+  return date;
+};

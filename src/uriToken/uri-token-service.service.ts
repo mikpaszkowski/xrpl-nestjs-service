@@ -8,23 +8,18 @@ import {
   URITokenMint,
 } from '@transia/xrpl';
 import { MintURITokenInputDTO } from './dto/uri-token-input.dto';
-import * as process from 'process';
 import { Account } from '../account/interfaces/account.interface';
 import HookState from '@transia/xrpl/dist/npm/models/ledger/URIToken';
 import { UriTokenMapper } from './mapper/uri-token.mapper';
 import { URITokenOutputDTO } from './dto/uri-token-output.dto';
+import { UriTokenTransactionFactory } from './uri-token.transactionFactory';
 
 @Injectable()
 export class URITokenService {
   constructor(private readonly xrpl: XrplService) {}
 
   async mintURIToken(input: MintURITokenInputDTO): Promise<SubmitResponse> {
-    const tx: URITokenMint = {
-      Account: input.account.address,
-      NetworkID: parseInt(process.env.NETWORK_ID || '21338'),
-      TransactionType: 'URITokenMint',
-      URI: input.uri,
-    };
+    const tx: URITokenMint = UriTokenTransactionFactory.prepareURITokenMintTx(input);
     return this.xrpl.submitTransaction(tx, input.account);
   }
 
@@ -50,12 +45,7 @@ export class URITokenService {
   }
 
   async removeURIToken(account: Account, index: string): Promise<SubmitResponse> {
-    const tx: URITokenBurn = {
-      Account: account.address,
-      NetworkID: parseInt(process.env.NETWORK_ID || '21338'),
-      TransactionType: 'URITokenBurn',
-      URITokenID: index,
-    };
+    const tx: URITokenBurn = UriTokenTransactionFactory.prepareURITokenBurnTx(account, index);
     return this.xrpl.submitTransaction(tx, account);
   }
 }

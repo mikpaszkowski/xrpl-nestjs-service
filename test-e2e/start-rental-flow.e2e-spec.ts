@@ -6,7 +6,7 @@ import { Client, Wallet, xrpToDrops } from '@transia/xrpl';
 import * as process from 'process';
 import { Account } from '../src/account/interfaces/account.interface';
 import { HookInputDTO } from '../src/hooks/dto/hook-input.dto';
-import { HookState, IAccountHookOutputDto } from '../src/hooks/dto/hook-output.dto';
+import { IAccountHookOutputDto } from '../src/hooks/dto/hook-output.dto';
 import { MintURITokenInputDTO } from '../src/uriToken/dto/uri-token-input.dto';
 import { URITokenOutputDTO } from '../src/uriToken/dto/uri-token-output.dto';
 import { setTimeout } from 'timers/promises';
@@ -17,6 +17,7 @@ import { getAccountInfoFromWallet, getDeadlineDate, TEST_TOKEN_URI_VALUE } from 
 import { floatToLEXfl } from '@transia/hooks-toolkit';
 import { doesHookStateHasEntry } from './e2e-test.utils';
 
+const RENTAL_TOTAL_AMOUNT = 600;
 describe('URIToken rental start flow tests (e2e)', () => {
   let app: INestApplication;
 
@@ -32,13 +33,11 @@ describe('URIToken rental start flow tests (e2e)', () => {
       faucetHost: 'hooks-testnet-v3.xrpl-labs.com',
     });
     aliceWallet = firstWallet.wallet;
-    console.log(aliceWallet);
     await setTimeout(10000);
     const secondWallet = await client.fundWallet(null, {
       faucetHost: 'hooks-testnet-v3.xrpl-labs.com',
     });
     bobWallet = secondWallet.wallet;
-    console.log(bobWallet);
   }, 30000);
 
   beforeEach(async () => {
@@ -54,57 +53,6 @@ describe('URIToken rental start flow tests (e2e)', () => {
   afterEach(async () => {
     await client.disconnect();
   }, 40000);
-
-  const removeHooks = async (wallet: Wallet) => {
-    await request(app.getHttpServer())
-      .delete('/hook')
-      .send({
-        address: wallet.address,
-        secret: wallet.seed,
-      } as HookInputDTO)
-      .expect(200)
-      .expect(() => {
-        console.log(`Hooks cleared successfully`);
-      });
-  };
-
-  const removeTokens = async (wallet: Wallet) => {
-    const response = await request(app.getHttpServer()).get(`/uri-tokens/${wallet.address}`);
-    expect(response.status).toBe(200);
-    const tokens = response.body as URITokenOutputDTO[];
-    if (tokens.length) {
-      await request(app.getHttpServer())
-        .delete(`/uri-tokens/${tokens[0].index}`)
-        .send({
-          address: wallet.address,
-          secret: wallet.seed,
-        } as Account)
-        .expect(200)
-        .expect(() => {
-          console.log(`URIToken: ${tokens[0].index} removed successfully`);
-        });
-    }
-  };
-
-  // it.each([aliceWallet, bobWallet])(
-  //   'should return account info when hit /account/:num/info (GET)',
-  //   (wallet: Wallet) => {
-  //     return request(app.getHttpServer())
-  //       .get(`/account/${wallet.address}/info`)
-  //       .expect(200)
-  //       .expect(({ body }: { body: AccountInfoOutputDto }) => {
-  //         expect(body.address).toEqual(wallet.address);
-  //         expect(body.numOfHookStateData).toEqual(0);
-  //       });
-  //   }
-  // );
-  //
-  // it.each([aliceWallet, bobWallet])(
-  //   'should return empty array of hooks when hit /hooks/:address (GET)',
-  //   (wallet: Wallet) => {
-  //     return request(app.getHttpServer()).get(`/hook/${wallet.address}`).expect(200).expect([]);
-  //   }
-  // );
 
   it('should install hook on Alice account when hit /hooks (POST)', async () => {
     const response = await request(app.getHttpServer())
@@ -157,6 +105,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
     expect(uriTokensResponse.status).toEqual(200);
     return uriTokensResponse.body as URITokenOutputDTO[];
   }
+
   it('should mint URIToken when hit /uri-tokens (POST)', async () => {
     await mintURIToken(aliceWallet);
     await setTimeout(10000);
@@ -170,7 +119,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
   it('should Alice create rental offer of URIToken for a Bob when hit /rentals/offers?type=START (POST)', async () => {
     const tokens = await getURITokensFrom(aliceWallet);
     const createRentalOfferInput: URITokenInputDTO = {
-      totalAmount: 600,
+      totalAmount: RENTAL_TOTAL_AMOUNT,
       account: getAccountInfoFromWallet(aliceWallet),
       uri: tokens[0].index,
       deadline: DEADLINE_TIMESTAMP,
@@ -184,14 +133,14 @@ describe('URIToken rental start flow tests (e2e)', () => {
 
     await setTimeout(5000);
     const updatedTokens = await getURITokensFrom(aliceWallet);
-    expect(updatedTokens[0].amount).toBe(xrpToDrops(600));
+    expect(updatedTokens[0].amount).toBe(xrpToDrops(RENTAL_TOTAL_AMOUNT));
     expect(updatedTokens[0].destination).toBe(bobWallet.address);
   }, 70000);
 
   it('should Bob accepts the rental offer and then own the URIToken start-offers/:index/accept (POST)', async () => {
     const tokens = await getURITokensFrom(aliceWallet);
     const createRentalOfferInput: AcceptRentalOffer = {
-      totalAmount: 600,
+      totalAmount: RENTAL_TOTAL_AMOUNT,
       renterAccount: getAccountInfoFromWallet(bobWallet),
       deadline: DEADLINE_TIMESTAMP,
     };
@@ -244,7 +193,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
   it('should not allow to create a rental offer for currently rented URIToken /rentals/offers?type=START (POST)', async () => {
     const tokens = await getURITokensFrom(bobWallet);
     const createRentalOfferInput: URITokenInputDTO = {
-      totalAmount: 600,
+      totalAmount: RENTAL_TOTAL_AMOUNT,
       account: getAccountInfoFromWallet(bobWallet),
       uri: tokens[0].index,
       deadline: getDeadlineDate(5).toISOString(),
@@ -260,7 +209,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
   it('should not allow to create a return offer for currently rented URIToken /rentals/offers?type=FINISH (POST)', async () => {
     const tokens = await getURITokensFrom(bobWallet);
     const createRentalOfferInput: URITokenInputDTO = {
-      totalAmount: 600,
+      totalAmount: RENTAL_TOTAL_AMOUNT,
       account: getAccountInfoFromWallet(bobWallet),
       uri: tokens[0].index,
       deadline: getDeadlineDate(5).toISOString(),

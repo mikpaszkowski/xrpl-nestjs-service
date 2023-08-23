@@ -10,7 +10,7 @@ import { setTimeout } from 'timers/promises';
 import { getAccountInfoFromWallet, TEST_TOKEN_URI_VALUE } from '../src/test-utils/test-utils';
 import { URITokenOutputDTO } from '../src/uriToken/dto/uri-token-output.dto';
 
-describe('URIToken management flow tests (e2e)', () => {
+describe('Account URIToken management flow tests (e2e)', () => {
   let app: INestApplication;
 
   const client = new Client(process.env.SERVER_API_ENDPOINT);

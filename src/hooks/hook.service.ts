@@ -8,6 +8,7 @@ import { StateUtility } from '@transia/hooks-toolkit';
 import HookDefintion from '@transia/xrpl/dist/npm/models/ledger/HookDefinition';
 import { SetHookType } from './hook.constants';
 import { HookTransactionFactory } from './hook.factory';
+import { HookState } from './dto/hook-output.dto';
 
 @Injectable()
 export class HookService {
@@ -79,6 +80,43 @@ export class HookService {
       address: input.address,
       secret: input.secret,
     });
+  }
+
+  async getAccountHooksStates(address: string) {
+    const namespace = await this.getNamespaceIfExistsOrDefault(address);
+    const response = await this.getListOfHooks(address);
+    return Promise.all(
+      response
+        ?.map((hookObj: Hook) => hookObj.Hook)
+        ?.map(async (hook) => {
+          return {
+            flags: hook.Flags,
+            hookHash: hook.HookHash,
+            hookNamespace: hook.HookNamespace || namespace,
+            hookGrants: hook.HookGrants?.map(({ HookGrant }) => {
+              return {
+                hookHash: HookGrant.HookHash,
+                authorize: HookGrant.Authorize,
+              };
+            }),
+            hookState: await this.getHookNSInternalState(address, hook.HookNamespace || namespace),
+          };
+        })
+    );
+  }
+
+  async getHookNSInternalState(address: string, namespace: string): Promise<HookState[]> {
+    try {
+      return (await this.xrpl.getAccountNamespace(address, namespace)).result.namespace_entries.map((entry) => {
+        return {
+          index: entry['index'],
+          key: entry['HookStateKey'],
+          data: entry['HookStateData'],
+        } as HookState;
+      });
+    } catch (err) {
+      return [];
+    }
   }
 
   async getAccountRentalHook(accountNumber: string): Promise<Hook | undefined> {

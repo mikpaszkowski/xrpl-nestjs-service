@@ -42,7 +42,7 @@ int64_t hook(uint32_t ctx) {
     int64_t otxn_deadline_value = float_int(*((int64_t *) otxn_param_value_deadline), 0, 1);
 
     //assignment of minimal deadline which must be at least to the next day
-    int64_t MIN_DEADLINE_TIMESTAMP = LEDGER_LAST_TIME_TS + LAST_CLOSED_LEDGER_BUFF + 10;
+    int64_t MIN_DEADLINE_TIMESTAMP = LEDGER_LAST_TIME_TS - 300;
     //reading originating account
     uint8_t otx_acc[20];
     otxn_field(SBUF(otx_acc), sfAccount);
@@ -130,12 +130,12 @@ int64_t hook(uint32_t ctx) {
     //checking if amount parameter is present
     int RENTAL_TOTAL_AMOUNT_PRESENT = otxn_param_value_amount_lookup > 0 && otxn_amount_value > 0;
     //check if rental context is valid
-     if (!DEADLINE_TIME_PRESENT && !RENTAL_TOTAL_AMOUNT_PRESENT) {
-            //accepting transaction treating it as a non-rental tx
-            accept(SBUF("[TX ACCEPTED]: Non-rental tx accepted"), (uint64_t) (uintptr_t) 0);
-        } else if (!DEADLINE_TIME_PRESENT || (!RENTAL_TOTAL_AMOUNT_PRESENT && URITOKEN_STORE_LOOKUP <= 0)) {
-            rollback(SBUF("[INVALID CONTEXT]: Invalid rental context"), ERROR_INVALID_TX_PARAMS);
-        } else {
+    if (!DEADLINE_TIME_PRESENT && !RENTAL_TOTAL_AMOUNT_PRESENT) {
+        //accepting transaction treating it as a non-rental tx
+        accept(SBUF("[TX ACCEPTED]: Non-rental tx accepted"), (uint64_t) (uintptr_t) 0);
+    } else if (!DEADLINE_TIME_PRESENT || (!RENTAL_TOTAL_AMOUNT_PRESENT && URITOKEN_STORE_LOOKUP <= 0)) {
+        rollback(SBUF("[INVALID CONTEXT]: Invalid rental context"), ERROR_INVALID_TX_PARAMS);
+    } else {
         uint8_t foreignRenterURIToken[32];
         int64_t foreignRenterURIToken_lookup = -1;
 
@@ -188,7 +188,7 @@ int64_t hook(uint32_t ctx) {
                 rollback(SBUF("[ONGOING RENTALS]: URIToken is already in ongoing rental process"),
                          ERROR_URITOKEN_OCCUPIED);
             } else {
-                if (RENTAL_DEADLINE_TS_VALUE > LEDGER_LAST_TIME_TS + LAST_CLOSED_LEDGER_BUFF) {
+                if (RENTAL_DEADLINE_TS_VALUE > LEDGER_LAST_TIME_TS + 86400) {
                     rollback(SBUF("[ONGOING RENTALS]: URIToken is already in ongoing rental process"),
                              ERROR_URITOKEN_OCCUPIED);
                 }

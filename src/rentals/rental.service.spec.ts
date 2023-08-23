@@ -20,7 +20,7 @@ import {
 import { Hook } from '@transia/xrpl/dist/npm/models/common';
 import { getForeignAccountTxParams, getRentalContextHookParams } from './rental.utils';
 import { OfferType } from './retnals.constants';
-import { URITokenService } from '../uriToken/uri-token-service-impl.service';
+import { URITokenService } from '../uriToken/uri-token-service.service';
 import { InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common';
 
 describe('RentalService unit spec', () => {

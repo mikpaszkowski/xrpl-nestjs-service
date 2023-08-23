@@ -54,6 +54,7 @@ export class XrplService {
       const { authorizedAccount, newTx } = await this.fillTxWithAdditionalInfo(account, tx);
       submitRes = await signAndSubmit(newTx, this.xrpl_client, authorizedAccount);
     } catch (err) {
+      Logger.error(err);
       throw new ServiceUnavailableException(`Transaction submission failure: ${err?.message}`);
     }
     this.handleResponse(submitRes, tx);
@@ -61,6 +62,7 @@ export class XrplService {
   }
 
   private handleResponse<T extends BaseTransaction>(submitRes, tx: T) {
+    Logger.log(submitRes);
     const formattedCode = this.formatResultCode(submitRes);
     if (formattedCode.prefix === XRPL_RESULT_PREFIX.SUCCESS.valueOf()) {
       Logger.log(`Transaction: ${tx.TransactionType} submitted successfully`);

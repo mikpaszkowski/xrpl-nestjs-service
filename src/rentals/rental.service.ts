@@ -6,7 +6,7 @@ import { HookService } from '../hooks/hook.service';
 import { AcceptRentalOffer, CancelRentalOfferDTO, ReturnURITokenInputDTO, URITokenInputDTO } from './dto/rental.dto';
 import { HookInputDTO } from '../hooks/dto/hook-input.dto';
 import { RentalsTransactionFactory } from './rentals.transactionFactory';
-import { URITokenService } from '../uriToken/uri-token-service-impl.service';
+import { URITokenService } from '../uriToken/uri-token-service.service';
 
 @Injectable()
 export class RentalService {

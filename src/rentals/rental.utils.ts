@@ -7,10 +7,14 @@ type IRentalContextData = Omit<BaseRentalInfo, 'rentalType'>;
 
 export function getRentalContextHookParams(input: IRentalContextData): HookParameter[] {
   return [
-    new iHookParamEntry(
-      new iHookParamName('RENTALAMOUNT', false),
-      new iHookParamValue(floatToLEXfl(input.totalAmount.toString()), true)
-    ).toXrpl(),
+    ...(input.totalAmount && input.totalAmount > 0
+      ? [
+          new iHookParamEntry(
+            new iHookParamName('RENTALAMOUNT', false),
+            new iHookParamValue(floatToLEXfl(input.totalAmount.toString()), true)
+          ).toXrpl(),
+        ]
+      : []),
     new iHookParamEntry(
       new iHookParamName('RENTALDEADLINE', false),
       new iHookParamValue(floatToLEXfl((Date.parse(input.deadline) / 1000).toString()), true)

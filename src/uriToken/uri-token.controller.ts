@@ -1,5 +1,5 @@
 import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
-import { URITokenService } from './uri-token-service-impl.service';
+import { URITokenService } from './uri-token-service.service';
 import { MintURITokenInputDTO } from './dto/uri-token-input.dto';
 import { URITokenOutputDTO, XRPLBaseResponseDTO } from './dto/uri-token-output.dto';
 import { Account } from '../account/interfaces/account.interface';

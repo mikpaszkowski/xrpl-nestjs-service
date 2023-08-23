@@ -5,7 +5,7 @@ import { HookService } from '../hooks/hook.service';
 import { RentalsTransactionFactory } from './rentals.transactionFactory';
 import { HookTransactionFactory } from '../hooks/hook.factory';
 import { XrplService } from '../xrpl/client/client.service';
-import { URITokenService } from '../uriToken/uri-token-service-impl.service';
+import { URITokenService } from '../uriToken/uri-token-service.service';
 
 @Module({
   controllers: [RentalsController],

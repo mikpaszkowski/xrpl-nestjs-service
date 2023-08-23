@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UriTokenController } from './uri-token.controller';
-import { URITokenService } from './uri-token-service-impl.service';
+import { URITokenService } from './uri-token-service.service';
 import { XrplService } from '../xrpl/client/client.service';
 import {
   SUCCESS_SUBMIT_RESPONSE,
