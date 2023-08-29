@@ -3,12 +3,11 @@ import { HookService } from './hook.service';
 import { HookInputDTO, HookInstallOutputDTO } from './dto/hook-input.dto';
 import { IAccountHookOutputDto } from './dto/hook-output.dto';
 import { isValidAddress } from '@transia/xrpl';
-import { XrplService } from '../xrpl/client/client.service';
 import { mapXRPLBaseResponseToDto } from '../common/api.utils';
 
 @Controller('hook')
 export class HookController {
-  constructor(private readonly service: HookService, private readonly xrpl: XrplService) {}
+  constructor(private readonly service: HookService) {}
 
   @Post()
   async deployHook(@Body() inputDTO: HookInputDTO): Promise<HookInstallOutputDTO> {
@@ -23,7 +22,7 @@ export class HookController {
   }
 
   @Put('/reset')
-  async resetHook(@Body() inputDTO: HookInputDTO) {
+  async resetHook(@Body() inputDTO: HookInputDTO): Promise<HookInstallOutputDTO> {
     const result: any = await this.service.resetHook(inputDTO);
     return mapXRPLBaseResponseToDto(result);
   }

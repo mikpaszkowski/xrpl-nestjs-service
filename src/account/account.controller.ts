@@ -3,6 +3,7 @@ import { XrplService } from '../xrpl/client/client.service';
 import { AccountInfoOutputDto } from './interfaces/account.interface';
 import { AccountMapper } from './mapper/account.mapper';
 import { IHookNamespaceInfo } from '../xrpl/client/interfaces/namespace.interface';
+import { AccountInfoRequest, AccountInfoResponse } from '@transia/xrpl';
 
 @Controller('account')
 export class AccountController {
@@ -10,7 +11,12 @@ export class AccountController {
 
   @Get(':num/info')
   async accountInfo(@Param('num') num: string): Promise<AccountInfoOutputDto> {
-    const accountInfoResponse = await this.xrpl.getAccountInfo(num);
+    const accountInfoReq: AccountInfoRequest = {
+      command: 'account_info',
+      account: num,
+      ledger_index: 'validated',
+    };
+    const accountInfoResponse = await this.xrpl.submitRequest<AccountInfoRequest, AccountInfoResponse>(accountInfoReq);
     return AccountMapper.accountInfoResponseToDto(accountInfoResponse);
   }
 

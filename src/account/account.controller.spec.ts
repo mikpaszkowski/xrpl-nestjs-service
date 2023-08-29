@@ -29,7 +29,7 @@ describe('AccountController unit spec', () => {
     id: 1,
   };
   const mockedXrplService = {
-    getAccountInfo: jest.fn().mockResolvedValue({
+    submitRequest: jest.fn().mockResolvedValue({
       id: '1',
       type: 'response',
       result: {

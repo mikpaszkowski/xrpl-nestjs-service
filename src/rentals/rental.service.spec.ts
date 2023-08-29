@@ -20,7 +20,7 @@ import {
 import { Hook } from '@transia/xrpl/dist/npm/models/common';
 import { getForeignAccountTxParams, getRentalContextHookParams } from './rental.utils';
 import { OfferType } from './retnals.constants';
-import { URITokenService } from '../uriToken/uri-token-service.service';
+import { URITokenService } from '../uriToken/uri-token.service';
 import { InternalServerErrorException, UnprocessableEntityException } from '@nestjs/common';
 
 describe('RentalService unit spec', () => {
@@ -90,26 +90,12 @@ describe('RentalService unit spec', () => {
         HookNamespace: TEST_HOOK_NS,
       },
     } as Hook);
-    (hookService.getNamespaceIfExistsOrDefault as jest.Mock).mockResolvedValue(TEST_HOOK_NS);
-    (hookService.updateHook as jest.Mock).mockResolvedValue(SUCCESS_SUBMIT_RESPONSE);
+    (hookService.grantAccessToHook as jest.Mock).mockResolvedValue(SUCCESS_SUBMIT_RESPONSE);
     (xrplService.submitTransaction as jest.Mock).mockResolvedValue(SUCCESS_SUBMIT_RESPONSE);
     //when
     await underTest.createOffer(OfferType.START, input);
     //then
-    expect(hookService.getAccountRentalHook).toBeCalledWith(TEST_ADDRESS_ALICE);
-    expect(hookService.getNamespaceIfExistsOrDefault).toBeCalledWith(TEST_ADDRESS_ALICE);
-    expect(hookService.updateHook).toBeCalledWith({
-      address: TEST_ADDRESS_ALICE,
-      grants: [
-        {
-          HookGrant: {
-            Authorize: TEST_ADDRESS_BOB,
-            HookHash: TEST_HOOK_HASH,
-          },
-        },
-      ],
-      secret: TEST_SECRET,
-    });
+    expect(hookService.grantAccessToHook).toBeCalledWith(input);
     expect(xrplService.submitTransaction).toBeCalledWith(uriTokenCreateSellOfferTx, {
       address: TEST_ADDRESS_ALICE,
       secret: TEST_SECRET,
@@ -165,15 +151,7 @@ describe('RentalService unit spec', () => {
       ],
     };
     (transactionFactory.prepareSellOfferTxForStart as jest.Mock).mockResolvedValue(uriTokenCreateSellOfferTx);
-    (hookService.getAccountRentalHook as jest.Mock).mockResolvedValue({
-      Hook: {
-        Flags: 16,
-        HookHash: TEST_HOOK_HASH,
-        HookNamespace: TEST_HOOK_NS,
-      },
-    } as Hook);
-    (hookService.getNamespaceIfExistsOrDefault as jest.Mock).mockResolvedValue(TEST_HOOK_NS);
-    (hookService.updateHook as jest.Mock).mockResolvedValue(FAILURE_SUBMIT_RESPONSE);
+    (hookService.grantAccessToHook as jest.Mock).mockResolvedValue(FAILURE_SUBMIT_RESPONSE);
     (xrplService.submitTransaction as jest.Mock).mockResolvedValue(SUCCESS_SUBMIT_RESPONSE);
     (uriTokenService.findToken as jest.Mock).mockResolvedValue({
       amount: undefined,
@@ -214,6 +192,8 @@ describe('RentalService unit spec', () => {
     };
     (transactionFactory.prepareSellOfferTxForFinish as jest.Mock).mockResolvedValue(uriTokenCreateSellOfferTx);
     (xrplService.submitTransaction as jest.Mock).mockResolvedValue(SUCCESS_SUBMIT_RESPONSE);
+    (uriTokenService.findToken as jest.Mock).mockResolvedValue({ flags: 0 });
+    (hookService.updateHook as jest.Mock).mockResolvedValue(SUCCESS_SUBMIT_RESPONSE);
     //when
     await underTest.createOffer(OfferType.FINISH, input);
     //then

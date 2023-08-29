@@ -8,7 +8,9 @@ import { StateUtility } from '@transia/hooks-toolkit';
 import HookDefintion from '@transia/xrpl/dist/npm/models/ledger/HookDefinition';
 import { SetHookType } from './hook.constants';
 import { HookTransactionFactory } from './hook.factory';
-import { HookState } from './dto/hook-output.dto';
+import { HookState, IAccountHookOutputDto } from './dto/hook-output.dto';
+import { BaseResponse } from '@transia/xrpl/dist/npm/models/methods/baseMethod';
+import { URITokenInputDTO } from '../rentals/dto/rental.dto';
 
 @Injectable()
 export class HookService {
@@ -46,20 +48,7 @@ export class HookService {
     return hook.Hook.HookNamespace;
   }
 
-  private generateRandomNamespace() {
-    const randomBytesForNS = randomBytes(32);
-    const hash = createHash('sha256');
-    hash.update(randomBytesForNS);
-    return hash.digest('hex').toUpperCase();
-  }
-
-  doesAccountHaveExistingHookWithEmptyNS(accountHook: Hook | undefined, hookDef: HookDefintion): boolean {
-    return (
-      !!accountHook && accountHook.Hook.HookNamespace === undefined && accountHook.Hook.HookHash === hookDef.HookHash
-    );
-  }
-
-  async remove(input: HookInputDTO) {
+  async remove(input: HookInputDTO): Promise<BaseResponse> {
     const removeHook_tx: SetHook = await HookTransactionFactory.prepareSetHookTx({
       type: SetHookType.DELETE,
       account: input.address,
@@ -82,7 +71,7 @@ export class HookService {
     });
   }
 
-  async getAccountHooksStates(address: string) {
+  async getAccountHooksStates(address: string): Promise<IAccountHookOutputDto[]> {
     const namespace = await this.getNamespaceIfExistsOrDefault(address);
     const response = await this.getListOfHooks(address);
     return Promise.all(
@@ -128,7 +117,7 @@ export class HookService {
     }
   }
 
-  async updateHook(input: HookInputDTO) {
+  async updateHook(input: HookInputDTO): Promise<BaseResponse> {
     const hookNamespace = await this.getNamespaceIfExistsOrDefault(input.address);
     const updateHook_tx: SetHook = await HookTransactionFactory.prepareSetHookTx({
       type: SetHookType.UPDATE,
@@ -136,6 +125,7 @@ export class HookService {
       hookNamespace,
       grants: input.grants,
     });
+    console.log(updateHook_tx);
     return await this.xrpl.submitTransaction(updateHook_tx, {
       address: input.address,
       secret: input.secret,
@@ -155,5 +145,39 @@ export class HookService {
     } catch (err) {
       return [];
     }
+  }
+
+  async grantAccessToHook(input: URITokenInputDTO): Promise<BaseResponse> {
+    const hook = await this.getAccountRentalHook(input.account.address);
+    const hookNamespace = await this.getNamespaceIfExistsOrDefault(input.account.address);
+    const grantHookAccessInput: HookInputDTO = {
+      address: input.account.address,
+      secret: input.account.secret,
+      grants: [
+        {
+          HookGrant: {
+            HookHash: hook.Hook.HookHash,
+            Authorize: input.destinationAccount,
+          },
+        },
+      ],
+    };
+    Logger.log(
+      `HookGrant sent by: ${input.account.address} for account: ${input.destinationAccount} to access namespace: ${hookNamespace}`
+    );
+    return await this.updateHook(grantHookAccessInput);
+  }
+
+  private generateRandomNamespace() {
+    const randomBytesForNS = randomBytes(32);
+    const hash = createHash('sha256');
+    hash.update(randomBytesForNS);
+    return hash.digest('hex').toUpperCase();
+  }
+
+  doesAccountHaveExistingHookWithEmptyNS(accountHook: Hook | undefined, hookDef: HookDefintion): boolean {
+    return (
+      !!accountHook && accountHook.Hook.HookNamespace === undefined && accountHook.Hook.HookHash === hookDef.HookHash
+    );
   }
 }

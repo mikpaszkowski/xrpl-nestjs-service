@@ -42,7 +42,7 @@ int64_t hook(uint32_t ctx) {
     int64_t otxn_deadline_value = float_int(*((int64_t *) otxn_param_value_deadline), 0, 1);
 
     //assignment of minimal deadline which must be at least to the next day
-    int64_t MIN_DEADLINE_TIMESTAMP = LEDGER_LAST_TIME_TS + LAST_CLOSED_LEDGER_BUFF + 10;
+    int64_t MIN_DEADLINE_TIMESTAMP = LEDGER_LAST_TIME_TS + LAST_CLOSED_LEDGER_BUFF + DAY_IN_SECONDS;
     //reading originating account
     uint8_t otx_acc[20];
     otxn_field(SBUF(otx_acc), sfAccount);

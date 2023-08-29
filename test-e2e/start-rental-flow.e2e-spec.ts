@@ -33,11 +33,13 @@ describe('URIToken rental start flow tests (e2e)', () => {
       faucetHost: 'hooks-testnet-v3.xrpl-labs.com',
     });
     aliceWallet = firstWallet.wallet;
+    console.log(aliceWallet);
     await setTimeout(10000);
     const secondWallet = await client.fundWallet(null, {
       faucetHost: 'hooks-testnet-v3.xrpl-labs.com',
     });
     bobWallet = secondWallet.wallet;
+    console.log(bobWallet);
   }, 30000);
 
   beforeEach(async () => {
@@ -72,7 +74,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
     expect(hooks[0].hookGrants).toBeUndefined();
   }, 15000);
 
-  it('should install hook on the Bob account when hit /hooks (POST)', async () => {
+  it('should install hook on Bob account when hit /hooks (POST)', async () => {
     const response = await request(app.getHttpServer())
       .post('/hook')
       .send({
@@ -116,7 +118,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
     expect(tokens[0].owner).toEqual(aliceWallet.address);
   }, 15000);
 
-  it('should Alice create rental offer of URIToken for a Bob when hit /rentals/offers?type=START (POST)', async () => {
+  it('should Alice create rental offer of URIToken for Bob when hit /offers?type=START (POST)', async () => {
     const tokens = await getURITokensFrom(aliceWallet);
     const createRentalOfferInput: URITokenInputDTO = {
       totalAmount: RENTAL_TOTAL_AMOUNT,
@@ -127,7 +129,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
       destinationAccount: bobWallet.address,
     };
     const createOfferResponse = await request(app.getHttpServer())
-      .post(`/rentals/offers?type=${OfferType.START}`)
+      .post(`/offers?type=${OfferType.START}`)
       .send(createRentalOfferInput);
     expect(createOfferResponse.status).toBe(201);
 
@@ -137,7 +139,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
     expect(updatedTokens[0].destination).toBe(bobWallet.address);
   }, 70000);
 
-  it('should Bob accepts the rental offer and then own the URIToken start-offers/:index/accept (POST)', async () => {
+  it('should Bob accepts the rental offer and then own the URIToken offers/:index/accept-start (POST)', async () => {
     const tokens = await getURITokensFrom(aliceWallet);
     const createRentalOfferInput: AcceptRentalOffer = {
       totalAmount: RENTAL_TOTAL_AMOUNT,
@@ -145,7 +147,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
       deadline: DEADLINE_TIMESTAMP,
     };
     const createOfferResponse = await request(app.getHttpServer())
-      .post(`/rentals/start-offers/${tokens[0].index}/accept`)
+      .post(`/offers/${tokens[0].index}/accept-start`)
       .send(createRentalOfferInput);
     expect(createOfferResponse.status).toBe(201);
 
@@ -190,7 +192,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
     });
   }, 70000);
 
-  it('should not allow to create a rental offer for currently rented URIToken /rentals/offers?type=START (POST)', async () => {
+  it('should not allow to create a rental offer for currently rented URIToken /offers?type=START (POST)', async () => {
     const tokens = await getURITokensFrom(bobWallet);
     const createRentalOfferInput: URITokenInputDTO = {
       totalAmount: RENTAL_TOTAL_AMOUNT,
@@ -201,12 +203,12 @@ describe('URIToken rental start flow tests (e2e)', () => {
       destinationAccount: aliceWallet.address,
     };
     const createOfferResponse = await request(app.getHttpServer())
-      .post(`/rentals/offers?type=${OfferType.START}`)
+      .post(`/offers?type=${OfferType.START}`)
       .send(createRentalOfferInput);
     expect(createOfferResponse.status).toBe(409);
   }, 30000);
 
-  it('should not allow to create a return offer for currently rented URIToken /rentals/offers?type=FINISH (POST)', async () => {
+  it('should not allow to create a return offer for currently rented URIToken /offers?type=FINISH (POST)', async () => {
     const tokens = await getURITokensFrom(bobWallet);
     const createRentalOfferInput: URITokenInputDTO = {
       totalAmount: RENTAL_TOTAL_AMOUNT,
@@ -217,7 +219,7 @@ describe('URIToken rental start flow tests (e2e)', () => {
       destinationAccount: 'r32d5V4f7VpsfPRmdx9UgpSAD1oSnoPDfm',
     };
     const createOfferResponse = await request(app.getHttpServer())
-      .post(`/rentals/offers?type=${OfferType.FINISH}`)
+      .post(`/offers?type=${OfferType.FINISH}`)
       .send(createRentalOfferInput);
     expect(createOfferResponse.status).toBe(409);
   });

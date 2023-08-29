@@ -1,4 +1,4 @@
-import { URITokenService } from './uri-token-service.service';
+import { URITokenService } from './uri-token.service';
 import { XrplService } from '../xrpl/client/client.service';
 import { TestBed } from '@automock/jest';
 import { URIToken } from '@transia/xrpl/dist/npm/models/ledger';

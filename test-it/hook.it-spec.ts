@@ -1,4 +1,12 @@
-import { Client, SetHook, URITokenBuy, URITokenCreateSellOffer, Wallet, xrpToDrops } from '@transia/xrpl';
+import {
+  Client,
+  SetHook,
+  URITokenBuy,
+  URITokenCancelSellOffer,
+  URITokenCreateSellOffer,
+  Wallet,
+  xrpToDrops,
+} from '@transia/xrpl';
 import * as process from 'process';
 import { Test, TestingModule } from '@nestjs/testing';
 import { XrplService } from '../src/xrpl/client/client.service';
@@ -12,7 +20,7 @@ import {
   getFutureDateIncreasedWith,
   TEST_TOKEN_URI,
 } from '../src/test-utils/test-utils';
-import { URITokenService } from '../src/uriToken/uri-token-service.service';
+import { URITokenService } from '../src/uriToken/uri-token.service';
 import { RentalService } from '../src/rentals/rental.service';
 import { RentalType } from '../src/uriToken/uri-token.constant';
 import { HookService } from '../src/hooks/hook.service';
@@ -49,6 +57,7 @@ describe('Hook rental logic testing', () => {
       faucetHost: 'hooks-testnet-v3.xrpl-labs.com',
     });
     bobWallet = secondWallet.wallet;
+    console.log(bobWallet);
   }, 30000);
 
   beforeEach(async () => {
@@ -240,10 +249,11 @@ describe('Hook rental logic testing', () => {
     } satisfies AcceptRentalOffer);
     //when: submitting URITokenBuy transaction
     await expect(xrplService.submitTransaction(tokenBuyTx, getAccountInfoFromWallet(bobWallet))).resolves.not.toThrow();
+    await setTimeout(5000);
   }, 15000);
 
   it('should Bob own the URIToken', async () => {
-    await setTimeout(5000);
+    await setTimeout(10000);
     const tokens = await uriTokenService.getAccountTokens(bobWallet.address);
     expect(tokens.length).toBeGreaterThan(0);
     expect(tokens[0].index).toBe(URITOKEN_INDEX);
@@ -294,6 +304,7 @@ describe('Hook rental logic testing', () => {
     await expect(
       xrplService.submitTransaction(tokenReturnTokenSellOfferTx, getAccountInfoFromWallet(bobWallet))
     ).resolves.not.toThrow();
+    await setTimeout(5000);
   }, 30000);
 
   it('should the URIToken be updated of Amount and Destination fields', async () => {
@@ -305,7 +316,21 @@ describe('Hook rental logic testing', () => {
     expect(tokens[0].destination).toBe(aliceWallet.address);
   }, 15000);
 
-  it('should finish rental via submission of URITokenBuy transaction', async () => {
+  it('should not allow Bob to cancel created return offer for Alice', async () => {
+    //given: creating return offer transaction
+    const cancelTokenReturnOffer: URITokenCancelSellOffer = await rentalTransactionFactory.prepareURITokenCancelOffer(
+      URITOKEN_INDEX,
+      {
+        account: getAccountInfoFromWallet(bobWallet),
+      }
+    );
+    //when: creating a rental offer for a token for Alice to return URIToken
+    await expect(
+      xrplService.submitTransaction(cancelTokenReturnOffer, getAccountInfoFromWallet(bobWallet))
+    ).rejects.toThrow(ConflictException);
+  }, 30000);
+
+  it('should Alice finish rental via submission of URITokenBuy transaction', async () => {
     const tokenBuyTx: URITokenBuy = await rentalTransactionFactory.prepareURITokenBuy(URITOKEN_INDEX, {
       renterAccount: getAccountInfoFromWallet(aliceWallet),
       totalAmount: 0,

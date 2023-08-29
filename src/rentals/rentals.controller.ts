@@ -5,23 +5,23 @@ import { AcceptRentalOffer, CancelRentalOfferDTO, URITokenInputDTO } from './dto
 import { XRPLBaseResponseDTO } from '../uriToken/dto/uri-token-output.dto';
 import { mapXRPLBaseResponseToDto } from '../common/api.utils';
 
-@Controller('rentals')
+@Controller('offers')
 export class RentalsController {
   constructor(private readonly service: RentalService) {}
 
-  @Post('offers')
+  @Post()
   async createLendOffer(@Query('type') type: OfferType, @Body() input: URITokenInputDTO): Promise<XRPLBaseResponseDTO> {
     const result: any = await this.service.createOffer(type, input);
     return mapXRPLBaseResponseToDto(result);
   }
 
-  @Delete('offers/:index')
+  @Delete(':index')
   async cancelOffer(@Param('index') index: string, @Body() input: CancelRentalOfferDTO): Promise<XRPLBaseResponseDTO> {
     const result: any = await this.service.cancelRentalOffer(index, input);
     return mapXRPLBaseResponseToDto(result);
   }
 
-  @Post('start-offers/:index/accept')
+  @Post(':index/accept-start')
   async acceptRentalOffer(
     @Param('index') index: string,
     @Body() input: AcceptRentalOffer
@@ -30,7 +30,7 @@ export class RentalsController {
     return mapXRPLBaseResponseToDto(result);
   }
 
-  @Post('return-offer/:index/accept')
+  @Post(':index/accept-return')
   async acceptReturnRentalOffer(
     @Param('index') index: string,
     @Body() input: AcceptRentalOffer
